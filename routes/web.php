@@ -15,17 +15,36 @@ use App\Http\Controllers\SolicitudController;
 |
 */
 
-Route::get('/', function () {
-    return view('contenido.contenido');
-});
+use App\Http\Controllers\AuthController;
 
-//Route::middleware('auth')->group(function () {
-    Route::get('tramites', [TramiteController::class, 'index'])->name('tramites.index');
-    Route::get('tramites/{id}', [TramiteController::class, 'show'])->name('tramites.show');
+// Mostrar el formulario de registro
+Route::get('register', [AuthController::class, 'showRegistrationForm'])->name('registercreate');
+
+// Registrar un nuevo usuario
+Route::post('register', [AuthController::class, 'register'])->name('register');
+
+// Mostrar el formulario de inicio de sesión
+Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
+
+// Iniciar sesión
+Route::post('login', [AuthController::class, 'login']);
+
+// Cerrar sesión
+Route::get('logout', [AuthController::class, 'logout'])->name('logout');
+
+
+Route::get('/', function () {
+    return view('tramites.create');
+})->middleware(['auth']);
+
+Route::middleware('auth')->group(function () {
+    Route::resource('tramites', TramiteController::class);
 
     Route::get('solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
     Route::get('solicitudes/{id}', [SolicitudController::class, 'show'])->name('solicitudes.show');
     Route::get('tramites/{id}/solicitud', [SolicitudController::class, 'create'])->name('solicitudes.create');
     Route::post('tramites/{id}/solicitud', [SolicitudController::class, 'store'])->name('solicitudes.store');
-//});
+});
+
+
 

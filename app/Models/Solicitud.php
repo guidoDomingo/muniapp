@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Solicitud extends Model
 {
+    protected $table = 'solicitudes'; // Actualiza aquí el nombre de la tabla
+    
     protected $fillable = ['user_id', 'tramite_id', 'detalles', 'estado'];
 
     public function tramite()

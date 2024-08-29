@@ -21,19 +21,20 @@ class SolicitudController extends Controller
         return view('solicitudes.create', compact('tramite'));
     }
 
-    public function store(Request $request, $id)
+    public function store(Request $request, $tramite_id)
     {
         $request->validate([
             'detalles' => 'required|string',
         ]);
 
-        Solicitud::create([
-            'user_id' => Auth::id(),
-            'tramite_id' => $id,
-            'detalles' => $request->detalles,
-        ]);
+        $solicitud = new Solicitud();
+        $solicitud->user_id =  auth()->id(); //auth()->id(); // Asegúrate de que el usuario esté autenticado
+        $solicitud->tramite_id = $tramite_id;
+        $solicitud->detalles = $request->input('detalles');
+        $solicitud->estado = 'pendiente'; // Ajusta el estado según sea necesario
+        $solicitud->save();
 
-        return redirect()->route('solicitudes.index')->with('message', 'Solicitud enviada con éxito');
+        return redirect()->route('tramites.index')->with('success', 'Solicitud enviada con éxito.');
     }
 
     public function show($id)

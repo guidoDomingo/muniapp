@@ -23,6 +23,34 @@
     <link href="{{ asset('src/assets/css/dark/dashboard/dash_1.css') }}" rel="stylesheet" type="text/css" />
     <!-- END PAGE LEVEL PLUGINS/CUSTOM STYLES -->
 
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <style>
+        .container-fluid {
+            width: 100%;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.dataTable {
+            width: 100% !important;
+        }
+
+        table.dataTable th,
+        table.dataTable td {
+            white-space: nowrap;
+        }
+    </style>
+
+    @yield('styles')
+
+    @laravelPWA
 
 </head>
 <body class="layout-boxed alt-menu">
@@ -59,23 +87,23 @@
                     </a>
                     <div class="dropdown-menu position-absolute" aria-labelledby="language-dropdown">
                         <a class="dropdown-item d-flex" href="javascript:void(0);">
-                            <img src="{{ asset('src/assets/img/1x1/us.svg') }}" class="flag-width" alt="flag"> 
+                            <img src="{{ asset('src/assets/img/1x1/us.svg') }}" class="flag-width" alt="flag">
                             <span class="align-self-center">&nbsp;English</span>
                         </a>
                         <a class="dropdown-item d-flex" href="javascript:void(0);">
-                            <img src="{{ asset('src/assets/img/1x1/tr.svg') }}" class="flag-width" alt="flag"> 
+                            <img src="{{ asset('src/assets/img/1x1/tr.svg') }}" class="flag-width" alt="flag">
                             <span class="align-self-center">&nbsp;Turkish</span>
                         </a>
                         <a class="dropdown-item d-flex" href="javascript:void(0);">
-                            <img src="{{ asset('src/assets/img/1x1/br.svg') }}" class="flag-width" alt="flag"> 
+                            <img src="{{ asset('src/assets/img/1x1/br.svg') }}" class="flag-width" alt="flag">
                             <span class="align-self-center">&nbsp;Portuguese</span>
                         </a>
                         <a class="dropdown-item d-flex" href="javascript:void(0);">
-                            <img src="{{ asset('src/assets/img/1x1/in.svg') }}" class="flag-width" alt="flag"> 
+                            <img src="{{ asset('src/assets/img/1x1/in.svg') }}" class="flag-width" alt="flag">
                             <span class="align-self-center">&nbsp;Hindi</span>
                         </a>
                         <a class="dropdown-item d-flex" href="javascript:void(0);">
-                            <img src="{{ asset('src/assets/img/1x1/de.svg') }}" class="flag-width" alt="flag"> 
+                            <img src="{{ asset('src/assets/img/1x1/de.svg') }}" class="flag-width" alt="flag">
                             <span class="align-self-center">&nbsp;German</span>
                         </a>
 
@@ -107,14 +135,14 @@
                                             <h6 class="">Kara Young</h6>
                                             <p class="">1 hr ago</p>
                                         </div>
-                                        
+
                                         <div class="icon-status">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-x"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="dropdown-item">
                                 <div class="media ">
                                     <img src="../src/assets/img/profile-15.jpeg" class="img-fluid me-2" alt="avatar">
@@ -146,7 +174,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="drodpown-title notification mt-2">
                                 <h6 class="d-flex justify-content-between"><span class="align-self-center">Notifications</span> <span class="badge badge-secondary">16 New</span></h6>
                             </div>
@@ -198,10 +226,10 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                         </div>
                     </div>
-                    
+
                 </li>
 
                 <li class="nav-item dropdown user-profile-dropdown  order-lg-0 order-1">
@@ -241,12 +269,12 @@
                             </a>
                         </div>
                         <div class="dropdown-item">
-                            <a href="auth-boxed-signin.html">
+                            <a href="{{ route('logout') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-log-out"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> <span>Log Out</span>
                             </a>
                         </div>
                     </div>
-                    
+
                 </li>
             </ul>
         </header>
@@ -317,16 +345,25 @@
                     </li>
 
                     <li class="menu">
-                        <a href="./app-chat.html" aria-expanded="false" class="dropdown-toggle">
+                        <a href="{{ route('tramites.create') }}" aria-expanded="false" class="dropdown-toggle">
                             <div class="">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                                <span>Chat</span>
+                                <span>Crear tramite</span>
                             </div>
                         </a>
                     </li>
-                    
+
+                    <li class="menu">
+                        <a href="{{ route('solicitudes.index') }}" aria-expanded="false" class="dropdown-toggle">
+                            <div class="">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                <span>Solicitudes</span>
+                            </div>
+                        </a>
+                    </li>
+
                 </ul>
-                
+
             </nav>
 
         </div>
@@ -376,6 +413,21 @@
     <script src="{{ asset('src/assets/js/dashboard/dash_1.js') }}"></script>
     <!-- END PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#tramites-table').DataTable({
+                "responsive": true,  // Habilita la funcionalidad responsive
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/Spanish.json"
+                }
+            });
+        });
+    </script>
+
+    @yield('scripts')
 
 </body>
 </html>
