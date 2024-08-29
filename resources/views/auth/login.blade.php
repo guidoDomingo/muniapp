@@ -22,7 +22,7 @@
                             <input id="password" type="password" class="form-control" name="password" required>
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                        <button type="submit" class="btn btn-primary mt-2">Iniciar Sesión</button>
 
                         <div class="mt-3">
                             <a href="{{ route('registercreate') }}" class="btn btn-secondary">Registrar</a>
