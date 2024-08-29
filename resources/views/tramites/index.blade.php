@@ -3,28 +3,20 @@
 @section('content')
 <div class="container-fluid">
     <h1 class="text-center mb-4">Trámites Disponibles</h1>
-    <div class="table-responsive">
-        <table id="tramites-table" class="table table-striped table-bordered">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Descripción</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($tramites as $tramite)
-                <tr>
-                    <td>{{ $tramite->id }}</td>
-                    <td>{{ $tramite->nombre }}</td>
-                    <td>{{ $tramite->descripcion }}</td>
-                    <td>
-                        <a href="{{ route('tramites.show', $tramite->id) }}" class="btn btn-primary">Ver</a>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <div class="row">
+        @foreach($tramites as $tramite)
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ $tramite->nombre }}</h5>
+                    <p class="card-text">{{ $tramite->descripcion }}</p>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ route('tramites.show', $tramite->id) }}" class="btn btn-primary w-100">Ver</a>
+                </div>
+            </div>
+        </div>
+        @endforeach
     </div>
+</div>
 @endsection

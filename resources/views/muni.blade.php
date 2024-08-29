@@ -29,7 +29,7 @@
         .container-fluid {
             width: 100%;
             padding: 20px;
-            background: white;
+            background: #413673;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 

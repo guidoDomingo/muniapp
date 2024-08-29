@@ -13,7 +13,7 @@
             <label for="descripcion">Descripción</label>
             <textarea name="descripcion" class="form-control" required></textarea>
         </div>
-        <button type="submit" class="btn btn-success">Guardar</button>
+        <button type="submit" class="btn btn-success mt-2">Guardar</button>
     </form>
 </div>
 @endsection
