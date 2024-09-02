@@ -32,7 +32,7 @@ class AuthController extends Controller
 
         Auth::attempt($request->only('email', 'password'));
 
-        return redirect()->intended('home');
+        return redirect('/');
     }
 
     // Mostrar el formulario de inicio de sesión

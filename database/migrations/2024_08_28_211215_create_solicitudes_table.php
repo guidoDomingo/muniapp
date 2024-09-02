@@ -19,6 +19,7 @@ class CreateSolicitudesTable extends Migration
         });
     }
 
+
     public function down()
     {
         Schema::dropIfExists('solicitudes');

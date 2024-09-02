@@ -8,10 +8,24 @@
         </div>
         <div class="card-body">
             <p><strong>Detalles:</strong> {{ $solicitud->detalles }}</p>
-            <p><strong>Estado:</strong> {{ $solicitud->estado }}</p>
+
+            <!-- Formulario para cambiar el estado de la solicitud -->
+            <form action="{{ route('solicitudes.updateEstado', $solicitud->id) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="form-group">
+                    <label for="estado"><strong>Estado:</strong></label>
+                    <select name="estado" id="estado" class="form-control">
+                        <option value="pendiente" {{ $solicitud->estado == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
+                        <option value="aprobado" {{ $solicitud->estado == 'aprobado' ? 'selected' : '' }}>Aprobado</option>
+                        <option value="rechazado" {{ $solicitud->estado == 'rechazado' ? 'selected' : '' }}>Rechazado</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success mt-2">Actualizar Estado</button>
+            </form>
 
             <!-- Mostrar los campos del formulario -->
-            <div class="formulario-campos">
+            <div class="formulario-campos mt-4">
                 @foreach(json_decode($solicitud->formulario, true)['campos'] as $campo)
                     <div class="form-group">
                         <label><strong>{{ ucwords(str_replace('_', ' ', $campo['nombre'])) }}:</strong></label>
@@ -34,24 +48,6 @@
                 <img src="{{ $base64 }}" class="responsive-img" alt="Código QR">
             </div>
 
-            @role('admin')
-                <!-- Mostrar formulario para cambiar el estado de la solicitud -->
-                <form action="{{ route('solicitudes.updateEstado', $solicitud->id) }}" method="POST">
-                    @csrf
-                    @method('PUT')
-                    <div class="form-group">
-                        <label for="estado"><strong>Estado:</strong></label>
-                        <select name="estado" id="estado" class="form-control">
-                            <option value="pendiente" {{ $solicitud->estado == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
-                            <option value="aprobado" {{ $solicitud->estado == 'aprobado' ? 'selected' : '' }}>Aprobado</option>
-                            <option value="rechazado" {{ $solicitud->estado == 'rechazado' ? 'selected' : '' }}>Rechazado</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-success mt-2">Actualizar Estado</button>
-                </form>
-            @endrole
-
-
             <form class="mt-4" action="{{ route('solicitudes.qr') }}" method="POST">
                 @csrf
                 <input type="hidden" name="url" value="{{ url('solicitudes/' . $solicitud->id) }}">
@@ -64,7 +60,6 @@
 
 @section('styles')
 <style>
-    /* CSS para que la imagen sea responsiva y centrada a la izquierda */
     .responsive-img {
         max-width: 100%;
         height: auto;
@@ -73,8 +68,8 @@
         margin-right: 15px;
     }
     .qr-container {
-        overflow: hidden; /* Asegura que el contenido flotante no se desborde */
-        margin-bottom: 20px; /* Espacio debajo del QR */
+        overflow: hidden;
+        margin-bottom: 20px;
     }
     .formulario-campos {
         margin-bottom: 20px;
@@ -83,9 +78,9 @@
         margin-top: 10px;
     }
     .thumbnail-img {
-        max-width: 150px; /* Tamaño de miniatura */
+        max-width: 150px;
         max-height: 150px;
-        object-fit: cover; /* Mantener la proporción de la imagen */
+        object-fit: cover;
         border: 1px solid #ddd;
         border-radius: 5px;
         padding: 5px;

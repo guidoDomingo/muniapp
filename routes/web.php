@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::get('solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
     Route::get('solicitudes/{id}', [SolicitudController::class, 'show'])->name('solicitudes.show');
     Route::post('/generate-qr', [QrCodeController::class, 'generateQrCode'])->name('solicitudes.qr');
+    Route::put('solicitudes/{id}/estado', [SolicitudController::class, 'updateEstado'])->name('solicitudes.updateEstado');
     Route::get('tramites/{id}/solicitud', [SolicitudController::class, 'create'])->name('solicitudes.create');
     Route::post('tramites/{id}/solicitud', [SolicitudController::class, 'store'])->name('solicitudes.store');
 });
