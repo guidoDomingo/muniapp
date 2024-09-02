@@ -34,13 +34,17 @@ class SolicitudController extends Controller
         $solicitud->estado = 'pendiente'; // Ajusta el estado según sea necesario
         $solicitud->save();
 
-        return redirect()->route('tramites.index')->with('success', 'Solicitud enviada con éxito.');
+        return redirect()->route('solicitudes.index')->with('success', 'Solicitud enviada con éxito.');
     }
 
     public function show($id)
     {
         $solicitud = Solicitud::findOrFail($id);
-        return view('solicitudes.show', compact('solicitud'));
+
+        // Crear una instancia del Request con la URL
+        $request = new Request(['url' => url('solicitudes/' . $solicitud->id)]);
+        $base64 = QrCodeController::generateQrCodeBase64($request);
+        return view('solicitudes.show', compact('solicitud','base64'));
     }
 }
 

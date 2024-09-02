@@ -12,6 +12,7 @@ class CreateSolicitudesTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('tramite_id')->constrained('tramites')->onDelete('cascade');
+            $table->json('formulario')->nullable(); // Columna JSON para almacenar el formulario completo
             $table->string('detalles');
             $table->string('estado')->default('pendiente');
             $table->timestamps();
@@ -23,4 +24,5 @@ class CreateSolicitudesTable extends Migration
         Schema::dropIfExists('solicitudes');
     }
 }
+
 
