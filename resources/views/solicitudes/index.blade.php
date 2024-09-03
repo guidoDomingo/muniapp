@@ -10,8 +10,9 @@
                 <div class="card h-100">
                     <div class="card-body">
                         <h5 class="card-title">Trámite: {{ $solicitud->tramite->nombre }}</h5>
-                        <p><strong>ID:</strong> {{ $solicitud->id }}</p>
-                        <p><strong>Estado:</strong> {{ $solicitud->estado }}</p>
+                        <h5 class="card-title">Usuario: {{ $solicitud->user->name }}</h5>
+                        <h5><strong>ID:</strong> {{ $solicitud->id }}</h5>
+                        <h5 class="card-title"><strong>Estado:</strong> {{ $solicitud->estado }}</h5>
                     </div>
                     <div class="card-footer">
                         <a href="{{ route('solicitudes.show', $solicitud->id) }}" class="btn btn-primary w-100">Ver</a>

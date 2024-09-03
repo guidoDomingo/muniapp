@@ -13,6 +13,13 @@ class SolicitudController extends Controller
     public function index()
     {
         $solicitudes = Solicitud::where('user_id', Auth::id())->get();
+
+        // Verificar si el usuario es administrador
+        if (Auth::user()->hasRole('admin')) {
+            
+            $solicitudes = Solicitud::all();
+        }
+
         return view('solicitudes.index', compact('solicitudes'));
     }
 
@@ -124,17 +131,21 @@ class SolicitudController extends Controller
 
     public function updateEstado(Request $request, $id)
     {
-
+        
         // Verificar si el usuario es administrador
-        if (Auth::user()->hasRole('admin')) {
+        if (!Auth::user()->hasRole('admin')) {
             // Código para usuarios admin
             return redirect()->back()->withErrors(['mensaje' => 'No tienes permiso para realizar esta acción.']);
         }
+
+        
         
         // Validar la solicitud
         $request->validate([
             'estado' => 'required|string|in:pendiente,aprobado,rechazado'
         ]);
+
+        
 
         // Buscar la solicitud por ID
         $solicitud = Solicitud::findOrFail($id);
