@@ -18,11 +18,11 @@
                         @if($campo['tipo'] === 'image')
                             <!-- Mostrar la imagen en miniatura -->
                             <div class="thumbnail-container">
-                                <img src="{{ Storage::url($campo['valor']) }}" class="thumbnail-img" alt="Imagen">
+                                <img src="{{ asset('storage/' . $campo['valor']) }}" class="thumbnail-img" alt="Imagen">
                             </div>
                         @elseif($campo['tipo'] === 'file' && pathinfo($campo['valor'], PATHINFO_EXTENSION) === 'pdf')
                             <!-- Mostrar un botón prominente para el PDF -->
-                            <a href="{{ Storage::url($campo['valor']) }}" class="btn btn-danger btn-pdf" target="_blank">Ver PDF</a>
+                            <a href="{{ asset('storage/' . $campo['valor']) }}" class="btn btn-danger btn-pdf" target="_blank">Ver PDF</a>
                         @else
                             <p>{{ $campo['valor'] }}</p>
                         @endif
