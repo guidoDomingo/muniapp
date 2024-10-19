@@ -13,7 +13,10 @@ class CreateSolicitudesTable extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('tramite_id')->constrained('tramites')->onDelete('cascade');
             $table->json('formulario')->nullable(); // Columna JSON para almacenar el formulario completo
-            $table->string('detalles');
+            $table->string('detalles')->nullable();
+            $table->text('comentario')->nullable();
+            $table->decimal('latitud', 10, 7)->nullable();
+            $table->decimal('longitud', 10, 7)->nullable();
             $table->string('estado')->default('pendiente');
             $table->timestamps();
         });

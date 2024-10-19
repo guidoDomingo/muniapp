@@ -16,7 +16,7 @@ class SolicitudController extends Controller
 
         // Verificar si el usuario es administrador
         if (Auth::user()->hasRole('admin')) {
-            
+
             $solicitudes = Solicitud::all();
         }
 
@@ -31,22 +31,22 @@ class SolicitudController extends Controller
 
     public function store(Request $request, $tramiteId)
     {
-        
+
         $campos = [];
 
         if ($request->hasFile('documento_identidad')) {
             $documento = $request->file('documento_identidad');
-        
+
             if ($documento->isValid()) {
                 $disk = Storage::disk('public');
                 $filename = uniqid() . '_' . $documento->getClientOriginalName(); // Genera un nombre único
                 $path = 'documentos/' . $filename;
-        
+
                 // Guardar el archivo en la ubicación especificada
                 $disk->put($path, file_get_contents($documento));
-        
+
                 $campos[] = [
-                    'nombre' => 'documento_identidad',
+                    'nombre' => 'documento_vigencia',
                     'tipo' => 'file',
                     'valor' => $path
                 ];
@@ -54,40 +54,45 @@ class SolicitudController extends Controller
                 return redirect()->back()->withErrors(['documento_identidad' => 'El archivo no es válido.']);
             }
         }
-        
-        
+
+
 
         // Verificar y manejar el archivo imagen_usuario
         if ($request->hasFile('imagen_usuario')) {
-            $imagen = $request->file('imagen_usuario');
-            
-            if ($imagen->isValid()) {
-                // Usar el disco público para guardar la imagen
-                $disk = Storage::disk('public');
-                $filename = uniqid() . '_' . $imagen->getClientOriginalName(); // Generar un nombre único para el archivo
-                $path = 'imagenes/' . $filename; // Definir el path donde se guardará el archivo
 
-                // Obtener la ruta completa del directorio de almacenamiento público
-                $fullPath = storage_path('app/public/') . $path;
+            foreach ($request->file('imagen_usuario') as $imagen) {
 
-                // Mover el archivo manualmente a la ubicación especificada
-                $imagen->move(dirname($fullPath), $filename);
+                //$imagen = $request->file('imagen_usuario');
 
-                $campos[] = [
-                    'nombre' => 'imagen_usuario',
-                    'tipo' => 'image',
-                    'valor' => $path
-                ];
-            } else {
-                return redirect()->back()->withErrors(['imagen_usuario' => 'El archivo no es válido.']);
+                if ($imagen->isValid()) {
+                    // Usar el disco público para guardar la imagen
+                    $disk = Storage::disk('public');
+                    $filename = uniqid() . '_' . $imagen->getClientOriginalName(); // Generar un nombre único para el archivo
+                    $path = 'imagenes/' . $filename; // Definir el path donde se guardará el archivo
+
+                    // Obtener la ruta completa del directorio de almacenamiento público
+                    $fullPath = storage_path('app/public/') . $path;
+
+                    // Mover el archivo manualmente a la ubicación especificada
+                    $imagen->move(dirname($fullPath), $filename);
+
+                    $campos[] = [
+                        'nombre' => 'imagen_zona',
+                        'tipo' => 'image',
+                        'valor' => $path
+                    ];
+                }
             }
+        } else {
+                return redirect()->back()->withErrors(['imagen_usuario' => 'El archivo no es válido.']);
         }
-        
+
+
 
         // Verificar y manejar el campo de texto nombre_usuario
         if ($request->has('nombre_usuario')) {
             $campos[] = [
-                'nombre' => 'nombre_usuario',
+                'nombre' => 'nombre_comision',
                 'tipo' => 'text',
                 'valor' => $request->input('nombre_usuario')
             ];
@@ -104,6 +109,9 @@ class SolicitudController extends Controller
         $solicitud->tramite_id = $tramiteId;
         $solicitud->formulario = json_encode($formulario);
         $solicitud->detalles = $request->input('detalles');
+        $solicitud->latitud = $request->latitud;
+        $solicitud->longitud = $request->longitud;
+        // $solicitud->comentario = $request->comentarios;
         $solicitud->save();
 
         return redirect()->route('solicitudes.index');
@@ -131,21 +139,21 @@ class SolicitudController extends Controller
 
     public function updateEstado(Request $request, $id)
     {
-        
+
         // Verificar si el usuario es administrador
         if (!Auth::user()->hasRole('admin')) {
             // Código para usuarios admin
             return redirect()->back()->withErrors(['mensaje' => 'No tienes permiso para realizar esta acción.']);
         }
 
-        
-        
+
+
         // Validar la solicitud
         $request->validate([
             'estado' => 'required|string|in:pendiente,aprobado,rechazado'
         ]);
 
-        
+
 
         // Buscar la solicitud por ID
         $solicitud = Solicitud::findOrFail($id);
@@ -156,6 +164,35 @@ class SolicitudController extends Controller
 
         // Redirigir con un mensaje de éxito
         return redirect()->route('solicitudes.show', $id)->with('success', 'El estado de la solicitud ha sido actualizado.');
+    }
+
+    public function updateComentario(Request $request, $id)
+    {
+
+        // Verificar si el usuario es administrador
+        if (!Auth::user()->hasRole('admin')) {
+            // Código para usuarios admin
+            return redirect()->back()->withErrors(['mensaje' => 'No tienes permiso para realizar esta acción.']);
+        }
+
+
+
+        // Validar la solicitud
+        $request->validate([
+            'comentarios' => 'required'
+        ]);
+
+
+
+        // Buscar la solicitud por ID
+        $solicitud = Solicitud::findOrFail($id);
+
+        // Actualizar el estado
+        $solicitud->comentario = $request->input('comentarios');
+        $solicitud->save();
+
+        // Redirigir con un mensaje de éxito
+        return redirect()->route('solicitudes.show', $id)->with('success', 'El comentario de la solicitud ha sido actualizado.');
     }
 }
 
