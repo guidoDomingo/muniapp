@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TramiteController;
 use App\Http\Controllers\SolicitudController;
+use App\Http\Controllers\ChatbotController;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +49,16 @@ Route::middleware('auth')->group(function () {
     Route::put('solicitudes/{id}/comentario', [SolicitudController::class, 'updateComentario'])->name('solicitudes.updateComentario');
     Route::get('tramites/{id}/solicitud', [SolicitudController::class, 'create'])->name('solicitudes.create');
     Route::post('tramites/{id}/solicitud', [SolicitudController::class, 'store'])->name('solicitudes.store');
+    
+    // Rutas del chatbot
+    Route::get('chatbot', [ChatbotController::class, 'index'])->name('chatbot.index');
+    Route::post('chatbot/procesar', [ChatbotController::class, 'procesarPregunta'])->name('chatbot.procesar');
+    
+    // Rutas de administración del chatbot (solo para administradores)
+    Route::get('chatbot/admin', [ChatbotController::class, 'admin'])->name('chatbot.admin');
+    Route::post('chatbot', [ChatbotController::class, 'store'])->name('chatbot.store');
+    Route::put('chatbot/{id}', [ChatbotController::class, 'update'])->name('chatbot.update');
+    Route::delete('chatbot/{id}', [ChatbotController::class, 'destroy'])->name('chatbot.destroy');
 });
 
 
