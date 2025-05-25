@@ -13,7 +13,78 @@ class ChatbotController extends Controller
      */
     public function index()
     {
-        return view('chatbot.index');
+        try {
+            // Intentar obtener las preguntas frecuentes de la base de datos
+            $preguntasFrecuentes = \App\Models\Faq::where('activo', true)
+                ->orderBy('orden', 'asc')
+                ->limit(10)
+                ->get();
+        } catch (\Exception $e) {
+            // Si hay algún error, proporcionar preguntas frecuentes predeterminadas
+            $preguntasFrecuentes = $this->getDefaultFaqs();
+        }
+        
+        // Si no hay preguntas en la base de datos, usar las predeterminadas
+        if ($preguntasFrecuentes->isEmpty()) {
+            $preguntasFrecuentes = $this->getDefaultFaqs();
+        }
+            
+        return view('chatbot.index', compact('preguntasFrecuentes'));
+    }
+    
+    /**
+     * Proporciona preguntas frecuentes por defecto cuando la base de datos no está disponible
+     *
+     * @return \Illuminate\Support\Collection
+     */
+    private function getDefaultFaqs()
+    {
+        $faqs = [
+            [
+                'id' => 1,
+                'pregunta' => '¿Cómo puedo iniciar un nuevo trámite?',
+                'respuesta' => 'Para iniciar un nuevo trámite, debes ir a la sección "Trámites" en el menú lateral, seleccionar el tipo de trámite que necesitas y hacer clic en "Iniciar Trámite". Sigue las instrucciones para completar el formulario correspondiente.',
+                'categoria' => 'Trámites',
+                'orden' => 1,
+                'activo' => true
+            ],
+            [
+                'id' => 2,
+                'pregunta' => '¿Cómo puedo verificar el estado de mi solicitud?',
+                'respuesta' => 'Para verificar el estado de tu solicitud, ve a la sección "Solicitudes" en el menú lateral. Allí encontrarás una lista de todas tus solicitudes con su estado actual (pendiente, aprobado o rechazado).',
+                'categoria' => 'Solicitudes',
+                'orden' => 2,
+                'activo' => true
+            ],
+            [
+                'id' => 3,
+                'pregunta' => '¿Qué documentos necesito para hacer un trámite?',
+                'respuesta' => 'Los documentos requeridos varían según el tipo de trámite. Al seleccionar un trámite específico, se te informará qué documentos necesitas adjuntar. Generalmente, se requiere tu documento de identidad vigente y, dependiendo del trámite, fotografías o documentación adicional.',
+                'categoria' => 'Documentación',
+                'orden' => 3,
+                'activo' => true
+            ],
+            [
+                'id' => 4,
+                'pregunta' => '¿Cuánto tiempo tarda en procesarse mi solicitud?',
+                'respuesta' => 'El tiempo de procesamiento varía según el tipo de trámite y la carga actual de trabajo. Por lo general, las solicitudes se procesan en un plazo de 3 a 5 días hábiles. Puedes verificar el estado de tu solicitud en cualquier momento en la sección "Solicitudes".',
+                'categoria' => 'Proceso',
+                'orden' => 5,
+                'activo' => true
+            ],
+            [
+                'id' => 5,
+                'pregunta' => '¿Qué hago si mi solicitud fue rechazada?',
+                'respuesta' => 'Si tu solicitud fue rechazada, podrás ver el motivo del rechazo en los comentarios de la solicitud. Puedes corregir los errores señalados y volver a presentar una nueva solicitud.',
+                'categoria' => 'Solicitudes',
+                'orden' => 6,
+                'activo' => true
+            ]
+        ];
+        
+        return collect($faqs)->map(function($faq) {
+            return (object) $faq;
+        });
     }
 
     /**
@@ -30,9 +101,18 @@ class ChatbotController extends Controller
 
         $pregunta = strtolower($request->input('pregunta'));
         
-        // Buscar en la base de datos preguntas similares
-        $faqs = \App\Models\Faq::where('activo', true)
-            ->get();
+        try {
+            // Intentar buscar en la base de datos preguntas similares
+            $faqs = \App\Models\Faq::where('activo', true)->get();
+        } catch (\Exception $e) {
+            // Si hay algún error, usar preguntas predeterminadas
+            $faqs = $this->getDefaultFaqs();
+        }
+        
+        // Si no hay preguntas en la base de datos, usar las predeterminadas
+        if ($faqs->isEmpty()) {
+            $faqs = $this->getDefaultFaqs();
+        }
         
         $mejorCoincidencia = null;
         $mejorPuntuacion = 0;
@@ -50,6 +130,21 @@ class ChatbotController extends Controller
                 'respuesta' => $mejorCoincidencia->respuesta,
                 'confianza' => $mejorPuntuacion
             ]);
+        }
+        
+        // Respuestas predefinidas para preguntas comunes
+        $respuestasComunes = $this->getRespuestasComunes();
+        foreach ($respuestasComunes as $palabrasClave => $respuesta) {
+            // Comprobar si alguna palabra clave está en la pregunta
+            $palabras = explode(',', $palabrasClave);
+            foreach ($palabras as $palabra) {
+                if (stripos($pregunta, trim($palabra)) !== false) {
+                    return response()->json([
+                        'respuesta' => $respuesta,
+                        'confianza' => 0.7
+                    ]);
+                }
+            }
         }
         
         // Respuesta por defecto si no se encontró coincidencia
@@ -74,6 +169,25 @@ class ChatbotController extends Controller
         if ($maxLen === 0) return 1.0; // Ambas cadenas están vacías
         
         return 1.0 - ($levenshtein / $maxLen);
+    }
+    
+    /**
+     * Proporciona respuestas comunes para palabras clave específicas
+     *
+     * @return array
+     */
+    private function getRespuestasComunes()
+    {
+        return [
+            'hola,buenos días,saludos,buen día,hi,hello' => 'Hola, soy el asistente virtual de MuniApp. ¿En qué puedo ayudarte hoy?',
+            'gracias,thanks,thank you,agradecido' => 'De nada, estoy aquí para ayudarte. ¿Hay algo más en lo que pueda asistirte?',
+            'adiós,chao,bye,hasta luego,nos vemos' => 'Hasta luego, que tengas un buen día. Si necesitas ayuda nuevamente, estaré aquí.',
+            'horario,atención,oficina,atienden' => 'El horario de atención de las oficinas municipales es de lunes a viernes de 8:00 AM a 4:00 PM.',
+            'dirección,ubicación,donde queda,donde está' => 'La oficina municipal está ubicada en Calle Principal #123, Centro. Puedes encontrar más información en la sección de Contacto.',
+            'teléfono,llamar,número,contacto' => 'Puedes comunicarte con la oficina municipal al teléfono 0123-456-789 en horario de atención.',
+            'quién eres,que eres,tu nombre' => 'Soy el asistente virtual de MuniApp, diseñado para ayudarte con información sobre trámites municipales y responder tus consultas.',
+            'ayuda,help,necesito ayuda' => 'Estoy aquí para ayudarte. Puedes preguntarme sobre cómo iniciar un trámite, verificar el estado de una solicitud, documentos necesarios, y más.',
+        ];
     }
     
     /**

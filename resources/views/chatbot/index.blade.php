@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <div class="row justify-content-center">
+    <div class="row">
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">Chatbot de Ayuda</div>
@@ -29,6 +29,37 @@
                             </form>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Preguntas Frecuentes</div>
+                <div class="card-body">
+                    @if(isset($preguntasFrecuentes) && count($preguntasFrecuentes) > 0)
+                        <div class="accordion" id="accordionFaqs">
+                            @foreach($preguntasFrecuentes as $index => $faq)
+                                <div class="accordion-item faq-item" data-pregunta="{{ $faq->pregunta }}">
+                                    <h2 class="accordion-header" id="heading{{ $index }}">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                                                data-bs-target="#collapse{{ $index }}" aria-expanded="false" 
+                                                aria-controls="collapse{{ $index }}">
+                                            {{ $faq->pregunta }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ $index }}" class="accordion-collapse collapse" 
+                                         aria-labelledby="heading{{ $index }}" data-bs-parent="#accordionFaqs">
+                                        <div class="accordion-body">
+                                            {{ $faq->respuesta }}
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p>No hay preguntas frecuentes disponibles.</p>
+                    @endif
                 </div>
             </div>
         </div>
@@ -73,6 +104,42 @@
     .chatbot-input {
         padding: 10px 0;
     }
+    
+    /* Estilos para las preguntas frecuentes */
+    .accordion-item {
+        margin-bottom: 8px;
+        border: 1px solid rgba(0,0,0,.125);
+        border-radius: 0.25rem;
+    }
+    .accordion-button {
+        padding: 10px 15px;
+        font-size: 14px;
+        color: #333;
+        background-color: #f8f9fa;
+        border: none;
+        text-align: left;
+        transition: all 0.3s ease;
+    }
+    .accordion-button:not(.collapsed) {
+        color: #007bff;
+        background-color: #e7f1ff;
+        box-shadow: none;
+    }
+    .accordion-button:focus {
+        box-shadow: none;
+        border-color: rgba(0,123,255,.25);
+    }
+    .accordion-body {
+        padding: 15px;
+        font-size: 14px;
+        color: #555;
+    }
+    .faq-item {
+        cursor: pointer;
+    }
+    .faq-item:hover .accordion-button {
+        background-color: #e7f1ff;
+    }
 </style>
 @endsection
 
@@ -82,6 +149,7 @@
         const chatForm = document.getElementById('chatForm');
         const userQuestion = document.getElementById('userQuestion');
         const chatMessages = document.getElementById('chatMessages');
+        const faqItems = document.querySelectorAll('.faq-item');
 
         // Función para añadir un mensaje al chat
         function addMessage(content, isUser = false) {
@@ -99,11 +167,8 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // Manejar el envío del formulario
-        chatForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const question = userQuestion.value.trim();
+        // Función para procesar una pregunta
+        function procesarPregunta(question) {
             if (!question) return;
             
             // Añadir la pregunta del usuario al chat
@@ -140,6 +205,28 @@
                 console.error('Error:', error);
                 chatMessages.removeChild(typingDiv);
                 addMessage('Lo siento, ha ocurrido un error al procesar tu pregunta. Por favor, intenta de nuevo más tarde.');
+            });
+        }
+
+        // Manejar el envío del formulario
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const question = userQuestion.value.trim();
+            procesarPregunta(question);
+        });
+        
+        // Manejar clics en las preguntas frecuentes
+        faqItems.forEach(function(item) {
+            const pregunta = item.getAttribute('data-pregunta');
+            const boton = item.querySelector('.accordion-button');
+            
+            boton.addEventListener('click', function() {
+                // También enviar la pregunta al chat cuando se hace clic en ella
+                setTimeout(() => {
+                    if (!boton.classList.contains('collapsed')) {
+                        procesarPregunta(pregunta);
+                    }
+                }, 100);
             });
         });
     });
