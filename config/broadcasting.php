@@ -3,7 +3,22 @@
 return [
 
     /*
-    |--------------------------------------------------------------------------
+    |---        'reverb' => [
+            'driver' => 'reverb',
+            'app_id' => env('REVERB_APP_ID', 'muniapp'),
+            'key' => env('REVERB_APP_KEY', 'muniapp_key'),
+            'app_key' => env('REVERB_APP_KEY', 'muniapp_key'),
+            'secret' => env('REVERB_APP_SECRET', 'muniapp_secret'),
+            'app_secret' => env('REVERB_APP_SECRET', 'muniapp_secret'),
+            'host' => env('REVERB_HOST', '127.0.0.1'),
+            'port' => env('REVERB_PORT', 8080),
+            'scheme' => env('REVERB_SCHEME', 'http'),
+            'options' => [
+                'cluster' => 'mt1',
+                'useTLS' => env('REVERB_SCHEME', 'http') === 'https',
+                'encrypted' => env('REVERB_SCHEME', 'http') === 'https',
+            ],
+        },---------------------------------------------------------
     | Default Broadcaster
     |--------------------------------------------------------------------------
     |
@@ -29,6 +44,21 @@ return [
     */
 
     'connections' => [
+
+        'reverb' => [
+            'driver' => 'reverb',
+            'app_id' => env('REVERB_APP_ID', 'muniapp'),
+            'app_key' => env('REVERB_APP_KEY', 'muniapp_key'),
+            'app_secret' => env('REVERB_APP_SECRET', 'muniapp_secret'),
+            'host' => env('REVERB_HOST', '127.0.0.1'),
+            'port' => env('REVERB_PORT', 8080),
+            'scheme' => env('REVERB_SCHEME', 'http'),
+            'options' => [
+                'cluster' => 'mt1',
+                'useTLS' => env('REVERB_SCHEME', 'http') === 'https',
+                'encrypted' => env('REVERB_SCHEME', 'http') === 'https',
+            ],
+        ],
 
         'pusher' => [
             'driver' => 'pusher',

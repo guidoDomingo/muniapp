@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TramiteController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\ChatController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,6 +60,11 @@ Route::middleware('auth')->group(function () {
     Route::post('chatbot', [ChatbotController::class, 'store'])->name('chatbot.store');
     Route::put('chatbot/{id}', [ChatbotController::class, 'update'])->name('chatbot.update');
     Route::delete('chatbot/{id}', [ChatbotController::class, 'destroy'])->name('chatbot.destroy');
+    
+    // Rutas del chat en tiempo real
+    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('chat', [ChatController::class, 'store'])->name('chat.store');
+    Route::get('chat/{room}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
 });
 
 
