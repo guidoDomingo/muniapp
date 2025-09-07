@@ -132,69 +132,142 @@
         background-color: #c9302c;
         color: white;
     }
+    
+    /* Estilos adicionales para el editor simple */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #374151;
+    }
+    
+    /* Ocultar el textarea original cuando se usa el editor */
+    .simple-editor-container + textarea {
+        display: none !important;
+    }
+    
+    /* Mejorar la apariencia del editor en el contexto del formulario */
+    .simple-editor-container {
+        margin-top: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    }
 </style>
 @endsection
 
 @section('scripts')
-
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCmCOQkQoH7KDvifqpLNcrcLDl4lbhAT1Q&callback=initMap" async defer></script>
-
+    @if($solicitud->latitud && $solicitud->longitud)
     <script>
-        function initMap() {
+        // Variable global para evitar conflictos
+        window.initMap = function() {
+            // Verificar que el elemento del mapa existe
+            const mapElement = document.getElementById('mapa');
+            if (!mapElement) {
+                console.error('Elemento mapa no encontrado');
+                return;
+            }
+
             // Latitud y longitud guardadas en la base de datos
-            const latitud = {{ $solicitud->latitud }};
-            const longitud = {{ $solicitud->longitud }};
+            const latitud = {{ $solicitud->latitud ?? 'null' }};
+            const longitud = {{ $solicitud->longitud ?? 'null' }};
 
-            // Crea el mapa centrado en la ubicación guardada
-            const location = { lat: latitud, lng: longitud };
-            const map = new google.maps.Map(document.getElementById('mapa'), {
-                zoom: 13,
-                center: location
-            });
+            // Verificar que tenemos coordenadas válidas
+            if (latitud === null || longitud === null) {
+                mapElement.innerHTML = '<div class="alert alert-warning">No hay ubicación guardada para esta solicitud</div>';
+                return;
+            }
 
-            // Añadir un marcador en la ubicación guardada
-            const marker = new google.maps.Marker({
-                position: location,
-                map: map
-            });
-        }
+            try {
+                // Crea el mapa centrado en la ubicación guardada
+                const location = { lat: parseFloat(latitud), lng: parseFloat(longitud) };
+                const map = new google.maps.Map(mapElement, {
+                    zoom: 13,
+                    center: location,
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                });
+
+                // Añadir un marcador en la ubicación guardada
+                const marker = new google.maps.Marker({
+                    position: location,
+                    map: map,
+                    title: 'Ubicación de la solicitud'
+                });
+
+                // Añadir info window
+                const infoWindow = new google.maps.InfoWindow({
+                    content: '<div><strong>Ubicación de la solicitud</strong><br>Lat: ' + latitud + '<br>Lng: ' + longitud + '</div>'
+                });
+
+                marker.addListener('click', function() {
+                    infoWindow.open(map, marker);
+                });
+
+            } catch (error) {
+                console.error('Error inicializando Google Maps:', error);
+                mapElement.innerHTML = '<div class="alert alert-danger">Error cargando el mapa</div>';
+            }
+        };
+
+        // Función de callback para errores de Google Maps
+        window.gm_authFailure = function() {
+            console.error('Error de autenticación de Google Maps');
+            const mapElement = document.getElementById('mapa');
+            if (mapElement) {
+                mapElement.innerHTML = '<div class="alert alert-danger">Error de autenticación de Google Maps</div>';
+            }
+        };
     </script>
-
-    <!-- Cargar TinyMCE desde el CDN -->
-    <script src="https://cdn.tiny.cloud/1/h7y0e8vsfrtfu3bejiv58jkgykpsem3y4be37m3p2gjtq85b/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
-
-    <!-- Inicializar TinyMCE -->
+    
+    <!-- Cargar Google Maps API de forma asíncrona -->
+    <script async defer 
+            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCmCOQkQoH7KDvifqpLNcrcLDl4lbhAT1Q&callback=initMap&loading=async">
+    </script>
+    @else
     <script>
-        @role('admin')
-            tinymce.init({
-            selector: '#comentarios',
-            plugins: [
-                // Core editing features
-                'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
-                // Your account includes a free trial of TinyMCE premium features
-                // Try the most popular premium features until Nov 1, 2024:
-                'checklist', 'mediaembed', 'casechange', 'export', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'editimage', 'advtemplate', 'ai', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown',
-            ],
-            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-            tinycomments_mode: 'embedded',
-            tinycomments_author: 'Author name',
-            language: 'es',
-            mergetags_list: [
-                { value: 'First.Name', title: 'First Name' },
-                { value: 'Email', title: 'Email' },
-            ],
-            ai_request: (request, respondWith) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
-            });
-        @else
-            tinymce.init({
-                selector: '#comentarios',
-                plugins: 'advlist autolink link image lists charmap print preview hr anchor pagebreak',
-                toolbar: false, // Deshabilitar la barra de herramientas
-                menubar: false, // Deshabilitar el menú
-                height: 300,
-                readonly: true // Establecer el modo de solo lectura
-            });
-        @endrole
+        // Si no hay coordenadas, mostrar mensaje
+        document.addEventListener('DOMContentLoaded', function() {
+            const mapElement = document.getElementById('mapa');
+            if (mapElement) {
+                mapElement.innerHTML = '<div class="alert alert-info">No hay ubicación guardada para esta solicitud</div>';
+            }
+        });
+    </script>
+    @endif
+
+    <!-- Simple Rich Text Editor (alternativa a TinyMCE sin alertas) -->
+    <script src="{{ asset('js/simple-rich-text-editor.js') }}"></script>
+
+    <!-- Inicializar Editor Simple -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const comentariosElement = document.getElementById('comentarios');
+            
+            if (comentariosElement) {
+                @role('admin')
+                    // Editor completo para administradores
+                    const editor = new SimpleRichTextEditor('comentarios', {
+                        height: '400px',
+                        placeholder: 'Escriba su comentario aquí...',
+                        readonly: false,
+                        toolbar: true
+                    });
+                    console.log('Editor simple inicializado para admin');
+                @else
+                    // Editor de solo lectura para usuarios
+                    const editor = new SimpleRichTextEditor('comentarios', {
+                        height: '300px',
+                        readonly: true,
+                        toolbar: false
+                    });
+                    console.log('Editor simple inicializado para usuario (solo lectura)');
+                @endrole
+            } else {
+                console.warn('Elemento #comentarios no encontrado');
+            }
+        });
     </script>
 
 @endsection

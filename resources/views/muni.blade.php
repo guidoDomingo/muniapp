@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no">
     <title>CORK Admin - Multipurpose Bootstrap Dashboard Template </title>
     <link rel="icon" type="image/x-icon" href="{{ asset('src/assets/img/favicon.ico') }}"/>
+    
+    <!-- Global Error Handler - Load first -->
+    <script src="{{ asset('js/global-error-handler.js') }}"></script>
+    
     <link href="{{ asset('layouts/collapsible-menu/css/light/loader.css') }}" rel="stylesheet" type="text/css" />
     <link href="{{ asset('layouts/collapsible-menu/css/dark/loader.css') }}" rel="stylesheet" type="text/css" />
     <script src="{{ asset('layouts/collapsible-menu/loader.js') }}"></script>
@@ -347,8 +351,45 @@
     <!-- END GLOBAL MANDATORY SCRIPTS -->
 
     <!-- BEGIN PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
-    <script src="{{ asset('src/plugins/src/apex/apexcharts.min.js') }}"></script>
-    <script src="{{ asset('src/assets/js/dashboard/dash_1.js') }}"></script>
+    <!-- Conditional script loading for ApexCharts and Dashboard -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if ApexCharts elements exist before loading
+            const chartElements = document.querySelectorAll('[id^="chart"], .apex-charts');
+            
+            if (chartElements.length > 0) {
+                console.log('Chart elements found, loading ApexCharts and safe dashboard scripts');
+                
+                // Load ApexCharts
+                const apexScript = document.createElement('script');
+                apexScript.src = "{{ asset('src/plugins/src/apex/apexcharts.min.js') }}";
+                apexScript.onload = function() {
+                    console.log('ApexCharts loaded successfully');
+                    
+                    // Load safe dashboard script instead of problematic one
+                    const safeScript = document.createElement('script');
+                    safeScript.src = "{{ asset('js/safe-dashboard.js') }}";
+                    safeScript.onload = function() {
+                        console.log('Safe dashboard script loaded successfully');
+                    };
+                    safeScript.onerror = function() {
+                        console.error('Error loading safe dashboard script');
+                    };
+                    document.body.appendChild(safeScript);
+                };
+                apexScript.onerror = function() {
+                    console.error('Error loading ApexCharts');
+                    // Show fallback message for chart elements
+                    chartElements.forEach(function(element) {
+                        element.innerHTML = '<div class="alert alert-warning text-center p-4"><h6><i class="fas fa-exclamation-triangle"></i> Gráfico no disponible</h6><p class="mb-0">Error cargando la librería de gráficos</p></div>';
+                    });
+                };
+                document.head.appendChild(apexScript);
+            } else {
+                console.log('No chart elements found, skipping ApexCharts and dashboard scripts');
+            }
+        });
+    </script>
     <!-- END PAGE LEVEL PLUGINS/CUSTOM SCRIPTS -->
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -356,10 +397,32 @@
     <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
     <script>
         $(document).ready(function() {
-            $('#tramites-table').DataTable({
-                "responsive": true,  // Habilita la funcionalidad responsive
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/Spanish.json"
+            // Only initialize DataTables if the table exists
+            if ($('#tramites-table').length > 0) {
+                try {
+                    $('#tramites-table').DataTable({
+                        "responsive": true,  // Habilita la funcionalidad responsive
+                        "language": {
+                            "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/Spanish.json"
+                        }
+                    });
+                    console.log('DataTables initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing DataTables:', error);
+                }
+            }
+            
+            // Initialize PerfectScrollbar conditionally
+            $('.menu-categories, .notification-scroll').each(function() {
+                if (typeof PerfectScrollbar !== 'undefined') {
+                    try {
+                        new PerfectScrollbar(this, {
+                            wheelPropagation: true,
+                            suppressScrollX: true
+                        });
+                    } catch (error) {
+                        console.warn('Error initializing PerfectScrollbar:', error);
+                    }
                 }
             });
         });
