@@ -160,70 +160,52 @@
 
 @section('scripts')
     @if($solicitud->latitud && $solicitud->longitud)
+    <!-- Leaflet CSS y JS (OpenStreetMap - Gratuito) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <!-- Nuestro Leaflet Map Manager -->
+    <script src="{{ asset('js/leaflet-map-manager.js') }}"></script>
+
     <script>
-        // Variable global para evitar conflictos
-        window.initMap = function() {
-            // Verificar que el elemento del mapa existe
-            const mapElement = document.getElementById('mapa');
-            if (!mapElement) {
-                console.error('Elemento mapa no encontrado');
-                return;
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar mapa de visualización con Leaflet
+            const lat = {{ $solicitud->latitud }};
+            const lng = {{ $solicitud->longitud }};
+            
+            console.log('Inicializando mapa de visualización con coordenadas:', lat, lng);
+            
+            const map = window.LeafletMapManager.initDisplayMap('mapa', lat, lng, {
+                zoom: 15,
+                scrollWheelZoom: true,
+                dragging: true
+            });
+
+            if (map) {
+                console.log('Mapa de visualización inicializado correctamente');
+                
+                // Obtener dirección de las coordenadas
+                window.LeafletMapManager.reverseGeocode(lat, lng)
+                    .then(address => {
+                        const addressDiv = document.createElement('div');
+                        addressDiv.className = 'mt-2 text-muted';
+                        addressDiv.innerHTML = `
+                            <small>
+                                <i class="fas fa-map-marker-alt"></i> 
+                                <strong>Dirección aproximada:</strong> ${address}
+                            </small>
+                        `;
+                        document.getElementById('mapa').parentNode.appendChild(addressDiv);
+                    })
+                    .catch(error => {
+                        console.log('No se pudo obtener la dirección:', error);
+                    });
             }
-
-            // Latitud y longitud guardadas en la base de datos
-            const latitud = {{ $solicitud->latitud ?? 'null' }};
-            const longitud = {{ $solicitud->longitud ?? 'null' }};
-
-            // Verificar que tenemos coordenadas válidas
-            if (latitud === null || longitud === null) {
-                mapElement.innerHTML = '<div class="alert alert-warning">No hay ubicación guardada para esta solicitud</div>';
-                return;
-            }
-
-            try {
-                // Crea el mapa centrado en la ubicación guardada
-                const location = { lat: parseFloat(latitud), lng: parseFloat(longitud) };
-                const map = new google.maps.Map(mapElement, {
-                    zoom: 13,
-                    center: location,
-                    mapTypeId: google.maps.MapTypeId.ROADMAP
-                });
-
-                // Añadir un marcador en la ubicación guardada
-                const marker = new google.maps.Marker({
-                    position: location,
-                    map: map,
-                    title: 'Ubicación de la solicitud'
-                });
-
-                // Añadir info window
-                const infoWindow = new google.maps.InfoWindow({
-                    content: '<div><strong>Ubicación de la solicitud</strong><br>Lat: ' + latitud + '<br>Lng: ' + longitud + '</div>'
-                });
-
-                marker.addListener('click', function() {
-                    infoWindow.open(map, marker);
-                });
-
-            } catch (error) {
-                console.error('Error inicializando Google Maps:', error);
-                mapElement.innerHTML = '<div class="alert alert-danger">Error cargando el mapa</div>';
-            }
-        };
-
-        // Función de callback para errores de Google Maps
-        window.gm_authFailure = function() {
-            console.error('Error de autenticación de Google Maps');
-            const mapElement = document.getElementById('mapa');
-            if (mapElement) {
-                mapElement.innerHTML = '<div class="alert alert-danger">Error de autenticación de Google Maps</div>';
-            }
-        };
-    </script>
-    
-    <!-- Cargar Google Maps API de forma asíncrona -->
-    <script async defer 
-            src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCmCOQkQoH7KDvifqpLNcrcLDl4lbhAT1Q&callback=initMap&loading=async">
+        });
     </script>
     @else
     <script>
@@ -231,7 +213,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             const mapElement = document.getElementById('mapa');
             if (mapElement) {
-                mapElement.innerHTML = '<div class="alert alert-info">No hay ubicación guardada para esta solicitud</div>';
+                mapElement.innerHTML = '<div class="alert alert-info text-center p-4"><i class="fas fa-info-circle"></i><h6>Ubicación no disponible</h6><p class="mb-0">No hay ubicación guardada para esta solicitud</p></div>';
             }
         });
     </script>

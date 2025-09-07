@@ -46,10 +46,26 @@
                     <textarea name="detalles" id="detalles" class="form-control" rows="4" required></textarea>
                 </div>
 
-                <!-- Mapa de Google para seleccionar ubicación -->
+                <!-- Búsqueda de ubicación -->
+                <div class="form-group">
+                    <label for="ubicacion-search">Buscar ubicación (opcional):</label>
+                    <div class="location-search-container">
+                        <div class="location-search-input">
+                            <input type="text" id="ubicacion-search" class="form-control" placeholder="Ej: Centro de Asunción, Paraguay">
+                            <button type="button" id="search-btn" class="btn btn-secondary">Buscar</button>
+                        </div>
+                        <div id="search-results" class="search-results"></div>
+                    </div>
+                </div>
+
+                <!-- Mapa de Leaflet (OpenStreetMap) para seleccionar ubicación -->
                 <div class="form-group">
                     <label for="map">Seleccione su ubicación en el mapa:</label>
                     <div id="map" style="width: 100%; height: 400px;"></div>
+                    <small class="form-text text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Arrastra el marcador o haz clic en el mapa para seleccionar la ubicación exacta
+                    </small>
                 </div>
 
                 <!-- Campos ocultos para guardar latitud y longitud -->
@@ -96,6 +112,17 @@
 @endsection
 
 @section('scripts')
+<!-- Leaflet CSS y JS (OpenStreetMap - Gratuito) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<!-- Nuestro Leaflet Map Manager -->
+<script src="{{ asset('js/leaflet-map-manager.js') }}"></script>
+
 <script>
     // Script para previsualización de imágenes
     document.addEventListener('DOMContentLoaded', function() {
@@ -105,139 +132,107 @@
         if (fileInput && preview) {
             fileInput.addEventListener('change', function(event) {
                 let files = event.target.files;
-                let fileArray = Array.from(files); // Convierte la lista de archivos en un array para poder manipularlo
+                let fileArray = Array.from(files);
 
-                // Limpiar el contenedor de la previsualización antes de agregar nuevas imágenes
                 preview.innerHTML = '';
 
-                // Iterar sobre los archivos seleccionados
                 fileArray.forEach((file, index) => {
-                    // Asegurarse de que el archivo es una imagen
                     if (file.type.startsWith('image/')) {
                         let reader = new FileReader();
 
-                        // Evento para cuando la imagen es cargada
                         reader.onload = function(e) {
-                            // Crear un contenedor para la imagen y el botón de eliminar
                             let imgContainer = document.createElement('div');
                             imgContainer.classList.add('img-container');
 
-                            // Crear el elemento de la imagen
                             let img = document.createElement('img');
                             img.src = e.target.result;
-                            img.style.width = '200px'; // Ajustar el tamaño de la previsualización
+                            img.style.width = '200px';
                             img.style.margin = '10px';
 
-                            // Crear el botón de eliminar
                             let removeBtn = document.createElement('button');
                             removeBtn.textContent = 'Eliminar';
                             removeBtn.classList.add('btn', 'btn-danger', 'remove-btn');
                             removeBtn.style.display = 'block';
                             removeBtn.style.marginTop = '5px';
-                            removeBtn.type = 'button'; // Importante para prevenir submit del form
+                            removeBtn.type = 'button';
 
-                            // Añadir evento de eliminar
                             removeBtn.addEventListener('click', function() {
-                                // Eliminar la imagen del contenedor de previsualización
                                 imgContainer.remove();
-
-                                // Eliminar el archivo del array de archivos seleccionados
                                 fileArray.splice(index, 1);
-
-                                // Actualizar el input de archivos para reflejar el cambio
-                                let dataTransfer = new DataTransfer(); // Objeto para actualizar la lista de archivos
+                                let dataTransfer = new DataTransfer();
                                 fileArray.forEach(file => dataTransfer.items.add(file));
                                 document.getElementById('imagen_usuario').files = dataTransfer.files;
                             });
 
-                            // Agregar la imagen y el botón al contenedor
                             imgContainer.appendChild(img);
                             imgContainer.appendChild(removeBtn);
-
-                            // Agregar el contenedor de la imagen a la previsualización
                             preview.appendChild(imgContainer);
                         };
 
-                        // Leer el archivo como una URL de datos
                         reader.readAsDataURL(file);
                     }
                 });
             });
         }
-    });
 
-    // Google Maps initialization
-    window.initMap = function() {
-        const mapElement = document.getElementById('map');
-        if (!mapElement) {
-            console.error('Elemento map no encontrado');
-            return;
-        }
-
-        try {
-            // Establece una ubicación predeterminada (Paraguay)
-            const defaultLocation = { lat: -25.2637, lng: -57.5759 };
-
-            // Inicializa el mapa centrado en la ubicación predeterminada
-            const map = new google.maps.Map(mapElement, {
-                center: defaultLocation,
+        // Inicializar mapa de Leaflet para selección de ubicación
+        if (document.getElementById('map')) {
+            console.log('Inicializando mapa de selección con Leaflet...');
+            
+            const mapData = window.LeafletMapManager.initSelectMap('map', {
+                center: [-25.2637, -57.5759], // Paraguay
                 zoom: 13,
-                mapTypeId: google.maps.MapTypeId.ROADMAP
+                latInputId: 'latitud',
+                lngInputId: 'longitud'
             });
 
-            // Añadir marcador en la ubicación predeterminada
-            const marker = new google.maps.Marker({
-                position: defaultLocation,
-                map: map,
-                draggable: true, // El marcador puede ser arrastrado
-                title: 'Arrastre para seleccionar ubicación'
-            });
+            if (mapData) {
+                console.log('Mapa de selección inicializado correctamente');
 
-            // Campos de latitud y longitud
-            const latitudInput = document.getElementById('latitud');
-            const longitudInput = document.getElementById('longitud');
+                // Búsqueda de ubicación
+                const searchBtn = document.getElementById('search-btn');
+                const searchInput = document.getElementById('ubicacion-search');
+                const searchResults = document.getElementById('search-results');
 
-            // Establecer valores iniciales
-            if (latitudInput) latitudInput.value = defaultLocation.lat;
-            if (longitudInput) longitudInput.value = defaultLocation.lng;
+                if (searchBtn && searchInput) {
+                    searchBtn.addEventListener('click', async function() {
+                        const query = searchInput.value.trim();
+                        if (!query) {
+                            alert('Por favor ingrese una ubicación para buscar');
+                            return;
+                        }
 
-            // Cuando el usuario mueve el marcador, actualizamos los campos latitud y longitud
-            marker.addListener('dragend', function() {
-                const position = marker.getPosition();
-                if (latitudInput) latitudInput.value = position.lat();
-                if (longitudInput) longitudInput.value = position.lng();
-            });
+                        searchBtn.disabled = true;
+                        searchBtn.textContent = 'Buscando...';
+                        searchResults.textContent = '';
 
-            // Permitir clics en el mapa para cambiar la posición del marcador
-            map.addListener('click', function(event) {
-                marker.setPosition(event.latLng);
-                if (latitudInput) latitudInput.value = event.latLng.lat();
-                if (longitudInput) longitudInput.value = event.latLng.lng();
-            });
+                        try {
+                            const result = await window.LeafletMapManager.searchLocation(query, 'map');
+                            searchResults.innerHTML = `<i class="fas fa-check text-success"></i> Ubicación encontrada: ${result.address}`;
+                            searchResults.style.color = '#10b981';
+                        } catch (error) {
+                            searchResults.innerHTML = `<i class="fas fa-exclamation-triangle text-warning"></i> No se encontró la ubicación. Intenta con términos más específicos.`;
+                            searchResults.style.color = '#f59e0b';
+                        } finally {
+                            searchBtn.disabled = false;
+                            searchBtn.textContent = 'Buscar';
+                        }
+                    });
 
-        } catch (error) {
-            console.error('Error inicializando Google Maps:', error);
-            mapElement.innerHTML = '<div class="alert alert-danger">Error cargando el mapa</div>';
+                    // Buscar al presionar Enter
+                    searchInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            searchBtn.click();
+                        }
+                    });
+                }
+            } else {
+                console.error('Error inicializando el mapa de selección');
+            }
         }
-    };
-
-    // Función de callback para errores de Google Maps
-    window.gm_authFailure = function() {
-        console.error('Error de autenticación de Google Maps');
-        const mapElement = document.getElementById('map');
-        if (mapElement) {
-            mapElement.innerHTML = '<div class="alert alert-danger">Error de autenticación de Google Maps</div>';
-        }
-    };
+    });
 </script>
-
-<!-- Cargar Google Maps API de forma asíncrona -->
-<script async defer 
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCmCOQkQoH7KDvifqpLNcrcLDl4lbhAT1Q&callback=initMap&loading=async">
-</script>
-
-
-
 @endsection
 
 
