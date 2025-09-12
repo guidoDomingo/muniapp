@@ -1,55 +1,11 @@
-# API Reserva Vehículos Laravel 10
-
-## Diapositiva 1: Introducción
-- Breve introducción sobre la temática de la API de reservas de vehículos.
-
-## Diapositiva 2: Objetivo
-- Explicar el objetivo de la API y su importancia en aplicaciones modernas.
-
-## Diapositiva 3: ¿Qué es una API?
-- Definición de API y su función en el desarrollo de software.
-
-## Diapositiva 4: ¿Qué es Laravel?
-- Introducción a Laravel como framework de PHP.
-
-## Diapositiva 5: Herramientas necesarias
-- Listado de herramientas como Composer, Laravel, Postman, etc.
-
-## Diapositiva 6: Estructura del proyecto
-- Descripción de la estructura básica de un proyecto Laravel.
-
-## Diapositiva 7: Entidades y base de datos
-- Explicación de las entidades involucradas y la base de datos.
-
-## Diapositiva 8: Rutas principales
-- Detalle de las rutas que se crearán para la API.
-
-## Diapositiva 9: Migraciones
-- Cómo se crean las migraciones para las tablas de la base de datos.
-
-## Diapositiva 10: Modelos
-- Introducción a los modelos en Laravel y su relación con la base de datos.
-
-## Diapositiva 11: Controladores
-- Explicación de la función de los controladores en la arquitectura MVC.
-
-## Diapositiva 12: Endpoints de vehículos y reservas
-- Descripción de los endpoints que se desarrollarán.
-
-## Diapositiva 13: Validaciones
-- Importancia de las validaciones en la API.
-
-## Diapositiva 14: Autenticación con Sanctum
-- Cómo implementar autenticación usando Laravel Sanctum.
-
-## Diapositiva 15: Pruebas con Postman
-- Guía para probar la API con Postman.
-
-## Diapositiva 16: Buenas prácticas
-- Recomendaciones para el desarrollo de APIs.
-
-## Diapositiva 17: Recursos
-- Listado de recursos y documentación adicional.
-
-## Diapositiva 18: Cierre
-- Reflexiones finales sobre el desarrollo de la API.
+- Portada profesional con iconos.
+- Objetivos claros y modernos.
+- Explicación de API y Laravel con recursos visuales (iconos, colores).
+- Diagrama entidad-relación simple de la base de datos.
+- Ejemplo de endpoints y rutas clave en formato tabla.
+- Migraciones y modelos con snippets de código resaltado.
+- Ejemplo de controlador y validación.
+- Ejemplo de autenticación con Sanctum (flujo visual y código).
+- Slide de pruebas con Postman (captura o esquema visual).
+- Buenas prácticas y siguientes pasos.
+- Slide de cierre e invitación a practicar.
