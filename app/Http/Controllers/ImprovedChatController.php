@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Storage;
 
-class ChatController extends Controller
+class ImprovedChatController extends Controller
 {
     /**
      * Show the chat interface.
@@ -42,7 +42,7 @@ class ChatController extends Controller
             $solicitud = Solicitud::where('tracking_code', $roomName)->first();
         }
         
-        return view('chat.index', compact('messages', 'roomName', 'chatType', 'availableRooms', 'solicitud'));
+        return view('chat.improved', compact('messages', 'roomName', 'chatType', 'availableRooms', 'solicitud'));
     }
     
     /**
@@ -96,9 +96,6 @@ class ChatController extends Controller
             // Enviar evento en tiempo real
             broadcast(new NewChatMessage($chat))->toOthers();
 
-            // Crear notificación para participantes relevantes
-            $this->notifyParticipants($chat, $roomName, $chatType);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Mensaje enviado correctamente',
@@ -133,91 +130,6 @@ class ChatController extends Controller
             ->get();
 
         return response()->json($messages);
-    }
-
-    /**
-     * Create a new private chat room
-     */
-    public function createPrivateRoom(Request $request): JsonResponse
-    {
-        $request->validate([
-            'participants' => 'required|array|min:1',
-            'participants.*' => 'exists:users,id',
-            'name' => 'nullable|string|max:100',
-        ]);
-
-        $participants = $request->participants;
-        $participants[] = auth()->id(); // Add current user
-        $participants = array_unique($participants);
-
-        $roomName = $request->name ?? 'private_' . uniqid();
-
-        $room = ChatRoom::create([
-            'name' => $roomName,
-            'type' => 'private',
-            'created_by' => auth()->id(),
-            'is_active' => true,
-        ]);
-
-        // Add participants
-        foreach ($participants as $participantId) {
-            $room->addParticipant($participantId);
-        }
-
-        return response()->json([
-            'success' => true,
-            'room' => $room,
-        ]);
-    }
-
-    /**
-     * Join a chat room
-     */
-    public function joinRoom(Request $request, $roomId): JsonResponse
-    {
-        $room = ChatRoom::findOrFail($roomId);
-        
-        if (!$room->isParticipant(auth()->id())) {
-            $room->addParticipant(auth()->id());
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Te has unido a la sala exitosamente',
-        ]);
-    }
-
-    /**
-     * Leave a chat room
-     */
-    public function leaveRoom($roomId): JsonResponse
-    {
-        $room = ChatRoom::findOrFail($roomId);
-        $room->removeParticipant(auth()->id());
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Has salido de la sala',
-        ]);
-    }
-
-    /**
-     * Mark messages as read
-     */
-    public function markAsRead(Request $request): JsonResponse
-    {
-        $request->validate([
-            'room' => 'required|string',
-            'chat_type' => 'required|string',
-        ]);
-
-        Chat::where('room', $request->room)
-            ->where('chat_type', $request->chat_type)
-            ->where('user_id', '!=', auth()->id())
-            ->where('is_read', false)
-            ->update(['is_read' => true]);
-
-        return response()->json(['success' => true]);
     }
 
     private function authorizeRoom($roomName, $chatType)
@@ -287,20 +199,6 @@ class ChatController extends Controller
             }
         }
 
-        // Salas privadas del usuario
-        $privateRooms = ChatRoom::whereHas('participants', function($query) use ($user) {
-            $query->where('user_id', $user->id);
-        })->where('type', 'private')->get();
-
-        foreach ($privateRooms as $room) {
-            $rooms[] = [
-                'name' => $room->name,
-                'display_name' => $room->description ?? 'Chat Privado',
-                'type' => 'private',
-                'unread_count' => 0,
-            ];
-        }
-
         return $rooms;
     }
 
@@ -311,11 +209,5 @@ class ChatController extends Controller
             return $solicitud ? $solicitud->id : null;
         }
         return null;
-    }
-
-    private function notifyParticipants($chat, $roomName, $chatType)
-    {
-        // Implementar notificaciones a participantes relevantes
-        // Esto se puede expandir según las necesidades específicas
     }
 }

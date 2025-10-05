@@ -5,6 +5,12 @@ use App\Http\Controllers\TramiteController;
 use App\Http\Controllers\SolicitudController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminTramiteController;
+use App\Http\Controllers\Admin\AdminSolicitudController;
+use App\Http\Controllers\Admin\AdminChatController;
+use App\Http\Controllers\Admin\AdminDepartmentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -36,9 +42,14 @@ Route::post('login', [AuthController::class, 'login']);
 Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 
 
-Route::get('/', function () {
-    return view('tramites.create');
-})->middleware(['auth']);
+Route::get('/', [TramiteController::class, 'index'])->middleware(['auth']);
+
+// Admin access route
+Route::get('/admin', function () {
+    return view('admin.login');
+})->name('admin.login.form');
+
+Route::post('/admin/login', [AuthController::class, 'adminLogin'])->name('admin.login');
 
 Route::middleware('auth')->group(function () {
     Route::resource('tramites', TramiteController::class);
@@ -65,6 +76,51 @@ Route::middleware('auth')->group(function () {
     Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('chat', [ChatController::class, 'store'])->name('chat.store');
     Route::get('chat/{room}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
+});
+
+// Admin Routes - Protected by admin role
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/analytics', [AdminDashboardController::class, 'analytics'])->name('analytics');
+    Route::get('/reports', [AdminDashboardController::class, 'reports'])->name('reports');
+    
+    // Users Management
+    Route::resource('users', AdminUserController::class);
+    
+    // Tramites Management
+    Route::resource('tramites', AdminTramiteController::class);
+    
+    // Solicitudes Management
+    Route::resource('solicitudes', AdminSolicitudController::class);
+    Route::patch('solicitudes/{solicitud}/status', [AdminSolicitudController::class, 'updateStatus'])->name('solicitudes.update-status');
+    Route::post('solicitudes/{solicitud}/assign', [AdminSolicitudController::class, 'assignUser'])->name('solicitudes.assign');
+    
+    // Chat Management
+    Route::get('chat', [AdminChatController::class, 'index'])->name('chat.index');
+    Route::get('chat/rooms', [AdminChatController::class, 'rooms'])->name('chat.rooms');
+    Route::post('chat/moderate', [AdminChatController::class, 'moderate'])->name('chat.moderate');
+    
+    // Departments Management
+    Route::resource('departments', AdminDepartmentController::class);
+    
+    // Settings
+    Route::get('settings', [AdminDashboardController::class, 'settings'])->name('settings');
+    Route::post('settings', [AdminDashboardController::class, 'updateSettings'])->name('settings.update');
+});
+
+// Commission Routes - Protected by commission role
+Route::middleware(['auth', 'role:commission|admin'])->prefix('commission')->name('commission.')->group(function () {
+    Route::get('/dashboard', function() { 
+        return view('commission.dashboard'); 
+    })->name('dashboard');
+    
+    Route::get('solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
+    Route::get('solicitudes/{solicitud}', [SolicitudController::class, 'show'])->name('solicitudes.show');
+    Route::patch('solicitudes/{solicitud}/estado', [SolicitudController::class, 'updateEstado'])->name('solicitudes.updateEstado');
+    
+    Route::get('chat', function() { 
+        return view('commission.chat'); 
+    })->name('chat.index');
 });
 
 

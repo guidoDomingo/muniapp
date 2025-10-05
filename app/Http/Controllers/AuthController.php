@@ -50,7 +50,16 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($request->only('email', 'password'))) {
-            return redirect()->intended('/');
+            $user = Auth::user();
+            
+            // Redirigir según el rol del usuario
+            if ($user->hasRole('admin')) {
+                return redirect()->route('admin.dashboard');
+            } elseif ($user->hasRole('commission')) {
+                return redirect()->route('commission.dashboard');
+            } else {
+                return redirect()->route('tramites.index');
+            }
         }
 
         return back()->withErrors([
@@ -63,6 +72,37 @@ class AuthController extends Controller
     {
         Auth::logout();
         return redirect('/login');
+    }
+
+    // Login específico para administradores
+    public function adminLogin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string',
+        ]);
+
+        if (Auth::attempt($request->only('email', 'password'))) {
+            $user = Auth::user();
+            
+            // Verificar si el usuario tiene rol de admin o commission
+            if ($user->roles->whereIn('name', ['admin', 'commission'])->count() > 0) {
+                if ($user->roles->where('name', 'admin')->count() > 0) {
+                    return redirect()->route('admin.dashboard');
+                } else {
+                    return redirect()->route('commission.dashboard');
+                }
+            } else {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'No tienes permisos para acceder al panel de administración.',
+                ]);
+            }
+        }
+
+        return back()->withErrors([
+            'email' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
+        ]);
     }
 }
 

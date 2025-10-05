@@ -22,6 +22,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar',
+        'phone',
+        'address',
+        'dni',
+        'department_id',
+        'is_active',
     ];
 
     /**
@@ -37,7 +43,42 @@ class User extends Authenticatable
 
     public function isAdmin()
     {
-        return $this->role === 'admin'; // Ajusta esto según cómo determines los roles en tu aplicación
+        return $this->hasRole('admin');
+    }
+
+    public function isCommission()
+    {
+        return $this->hasRole('commission');
+    }
+
+    public function isUser()
+    {
+        return $this->hasRole('user');
+    }
+
+    public function isFunctionary()
+    {
+        return $this->hasRole('functionary');
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar ? asset('storage/avatars/' . $this->avatar) : asset('images/default-avatar.png');
+    }
+
+    public function solicitudes()
+    {
+        return $this->hasMany(Solicitud::class);
+    }
+
+    public function chats()
+    {
+        return $this->hasMany(Chat::class);
+    }
+
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
     }
 
 
@@ -48,5 +89,6 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'is_active' => 'boolean',
     ];
 }

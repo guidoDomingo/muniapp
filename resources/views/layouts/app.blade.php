@@ -31,6 +31,11 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('chat.index') }}">Chat</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.login.form') }}">
+                            <i class="fas fa-cog"></i> Panel Admin
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav">
                     @auth
