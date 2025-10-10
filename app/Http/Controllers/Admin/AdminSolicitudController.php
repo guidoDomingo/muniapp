@@ -51,8 +51,17 @@ class AdminSolicitudController extends Controller
 
     public function show(Solicitud $solicitud)
     {
-        $solicitud->load(['user', 'tramite', 'assignedUser', 'history.user', 'chats.user']);
-        return view('admin.solicitudes.show', compact('solicitud'));
+        $solicitud->load([
+            'user', 
+            'tramite', 
+            'assignedUser', 
+            'history' => function($query) {
+                $query->with('user')->orderBy('created_at', 'asc');
+            }, 
+            'chats.user'
+        ]);
+        $users = User::role(['commission', 'functionary'])->get();
+        return view('admin.solicitudes.show', compact('solicitud', 'users'));
     }
 
     public function edit(Solicitud $solicitud)
@@ -100,13 +109,19 @@ class AdminSolicitudController extends Controller
         $oldStatus = $solicitud->estado;
         $solicitud->update(['estado' => $request->status]);
 
-        // Registrar en historial
-        $solicitud->history()->create([
-            'user_id' => auth()->id(),
-            'previous_status_id' => null,
-            'new_status_id' => null,
-            'comments' => $request->comments ?? 'Estado actualizado',
-        ]);
+        // Registrar en historial usando el nuevo sistema
+        \App\Models\SolicitudHistory::createEntry(
+            $solicitud->id,
+            auth()->id(),
+            'status_changed',
+            $oldStatus,
+            $request->status,
+            $request->comments ?? "Estado cambiado de '$oldStatus' a '{$request->status}'",
+            [
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]
+        );
 
         return response()->json([
             'success' => true,

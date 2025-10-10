@@ -119,6 +119,7 @@
                                     <th>Código</th>
                                     <th>Usuario</th>
                                     <th>Trámite</th>
+                                    <th>Datos del Formulario</th>
                                     <th>Estado</th>
                                     <th>Prioridad</th>
                                     <th>Asignado a</th>
@@ -151,6 +152,38 @@
                                         @if($solicitud->tramite->department)
                                             <br>
                                             <small class="text-muted">{{ $solicitud->tramite->department->name }}</small>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @php
+                                            $formData = json_decode($solicitud->formulario, true);
+                                            $campos = $formData['campos'] ?? [];
+                                        @endphp
+                                        @if(count($campos) > 0)
+                                            <div class="form-data-summary">
+                                                @foreach(array_slice($campos, 0, 3) as $campo)
+                                                    <div class="mb-1">
+                                                        <small class="text-muted">{{ $campo['nombre'] }}:</small>
+                                                        <br>
+                                                        <span style="font-size: 0.85em;">
+                                                            @if($campo['tipo'] === 'file' || $campo['tipo'] === 'image')
+                                                                <i class="fas fa-paperclip text-primary"></i> 
+                                                                {{ basename($campo['valor']) }}
+                                                            @else
+                                                                {{ Str::limit($campo['valor'], 30) }}
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                                @if(count($campos) > 3)
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-plus"></i> 
+                                                        {{ count($campos) - 3 }} más...
+                                                    </small>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span class="text-muted">Sin datos adicionales</span>
                                         @endif
                                     </td>
                                     <td>
@@ -231,7 +264,7 @@
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-4">
+                                    <td colspan="10" class="text-center py-4">
                                         <div class="empty-state">
                                             <i class="fas fa-list fa-3x text-muted mb-3"></i>
                                             <h5 class="text-muted">No se encontraron solicitudes</h5>
@@ -402,6 +435,11 @@ $('#confirmStatusUpdate').click(function() {
     $.ajax({
         url: `/admin/solicitudes/${currentSolicitudId}/status`,
         method: 'PATCH',
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
         data: {
             _token: '{{ csrf_token() }}',
             status: currentStatus,
@@ -410,11 +448,17 @@ $('#confirmStatusUpdate').click(function() {
         success: function(response) {
             $('#statusModal').modal('hide');
             if (response.success) {
+                // Mostrar mensaje de éxito
+                toastr.success('Estado actualizado exitosamente');
                 location.reload();
             } else {
-                alert('Error: ' + response.message);
+                toastr.error('Error: ' + response.message);
             }
         },
+        error: function(xhr, status, error) {
+            console.error('Error updating status:', xhr.responseText);
+            toastr.error('Error al actualizar el estado: ' + error);
+        }
         error: function() {
             alert('Error al actualizar el estado');
         }
@@ -465,4 +509,40 @@ $('#status, #tramite, #priority').change(function() {
     $(this).closest('form').submit();
 });
 </script>
+@endpush
+
+@push('styles')
+<style>
+.form-data-summary {
+    max-width: 200px;
+    font-size: 0.85em;
+}
+
+.form-data-summary .mb-1 {
+    margin-bottom: 0.3rem !important;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.form-data-summary .mb-1:last-child {
+    border-bottom: none;
+}
+
+.table td {
+    vertical-align: middle;
+}
+
+.form-data-summary small.text-muted {
+    font-weight: 600;
+    color: #495057 !important;
+}
+
+/* Mejorar responsive de la tabla */
+@media (max-width: 768px) {
+    .form-data-summary {
+        max-width: 150px;
+        font-size: 0.8em;
+    }
+}
+</style>
 @endpush

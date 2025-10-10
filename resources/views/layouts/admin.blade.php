@@ -8,78 +8,47 @@
     
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
     
     <style>
-        :root {
-            --primary-color: #2563eb;
-            --secondary-color: #64748b;
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --info-color: #06b6d4;
-            --dark-color: #1e293b;
-            --light-color: #f8fafc;
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
         }
         
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9;
+        .main-sidebar .brand-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8125rem 1rem;
+            transition: width .3s ease-in-out;
+            color: rgba(255,255,255,.8);
+            white-space: nowrap;
+            border-bottom: 1px solid #4b545c;
         }
         
-        .main-sidebar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        .sidebar-dark-primary .nav-sidebar>.nav-item>.nav-link.active {
+            background-color: #007bff;
+            color: #fff;
         }
         
-        .nav-sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            border-radius: 8px;
-            margin: 2px 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-sidebar .nav-link:hover,
-        .nav-sidebar .nav-link.active {
-            background-color: rgba(255,255,255,0.1);
-            color: white;
-            transform: translateX(5px);
-        }
-        
-        .content-wrapper {
-            background-color: #f1f5f9;
-        }
-        
-        .card {
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            transition: all 0.3s ease;
-        }
-        
-        .card:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
+        .content-wrapper, .right-side, .main-footer {
+            transition: -webkit-transform .3s ease-in-out;
+            transition: transform .3s ease-in-out;
+            transition: transform .3s ease-in-out,-webkit-transform .3s ease-in-out;
+            margin-left: 250px;
         }
         
         .card-header {
-            background-color: transparent;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 1.5rem;
-        }
-        
-        .btn {
-            border-radius: 8px;
-            font-weight: 500;
-            padding: 0.5rem 1.5rem;
-            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: none;
         }
         
         .btn-primary {
@@ -88,115 +57,97 @@
         }
         
         .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-        }
-        
-        .small-box {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            transition: all 0.3s ease;
-        }
-        
-        .small-box:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-        
-        .small-box .inner h3 {
-            font-weight: 700;
-            font-size: 2.5rem;
-        }
-        
-        .small-box .icon i {
-            font-size: 70px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
         .navbar-nav .nav-link {
-            color: #64748b;
-            font-weight: 500;
+            color: rgba(255,255,255,.8);
+            border-radius: 0.375rem;
+            margin: 0 0.125rem;
         }
         
-        .sidebar-mini.sidebar-collapse .main-sidebar:hover {
-            width: 250px;
+        .navbar-nav .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255,255,255,.1);
         }
         
         .content-header h1 {
-            font-weight: 600;
-            color: #1e293b;
+            font-size: 1.8rem;
+            margin: 0;
         }
         
-        .breadcrumb-item a {
-            color: #64748b;
-            text-decoration: none;
+        .card {
+            box-shadow: 0 0 1px rgba(0,0,0,.125), 0 1px 3px rgba(0,0,0,.2);
+            margin-bottom: 1rem;
         }
         
-        .breadcrumb-item.active {
-            color: #2563eb;
-        }
-        
-        .table {
-            border-radius: 8px;
-            overflow: hidden;
+        .card-header .card-title {
+            font-weight: 500;
+            margin: 0;
         }
         
         .table th {
-            background-color: #f8fafc;
-            border: none;
+            border-top: none;
             font-weight: 600;
-            color: #374151;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
         }
         
         .badge {
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
             font-weight: 500;
         }
         
-        .progress {
-            height: 8px;
-            border-radius: 4px;
-        }
-        
-        .modal-content {
-            border-radius: 12px;
-            border: none;
-        }
-        
         .modal-header {
-            border-bottom: 1px solid #e2e8f0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom: none;
         }
         
-        .form-control, .form-select {
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            transition: all 0.2s ease;
+        .modal-header .close {
+            color: white;
+            opacity: 0.8;
         }
         
-        .form-control:focus, .form-select:focus {
-            border-color: #2563eb;
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        .modal-header .close:hover {
+            opacity: 1;
         }
         
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
         
-        .fade-in-up {
-            animation: fadeInUp 0.5s ease;
+        .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .page-link {
+            color: #667eea;
+        }
+        
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
         }
     </style>
     
     @stack('styles')
+    
+    <!-- Fix FontAwesome loading -->
+    <script>
+        // Ensure FontAwesome loads
+        if (!document.querySelector('link[href*="font-awesome"]')) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+            document.head.appendChild(link);
+        }
+    </script>
 </head>
+
 <body class="hold-transition sidebar-mini layout-fixed">
     <div class="wrapper">
         
@@ -269,7 +220,7 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a href="{{ route('admin.dashboard') }}" class="brand-link">
-                <img src="{{ asset('images/logo.png') }}" alt="MuniApp Logo" class="brand-image img-circle elevation-3" style="opacity: .8">
+                <img src="{{ url('images/logo.jpg') }}" alt="MuniApp Logo" class="brand-image system-logo elevation-3" style="opacity: .8; max-height: 33px; width: auto;" onerror="this.style.display='none'">
                 <span class="brand-text font-weight-light">MuniApp Admin</span>
             </a>
 
@@ -342,7 +293,7 @@
                         </li>
                         
                         <li class="nav-item">
-                            <a href="{{ route('admin.chat.index') }}" class="nav-link {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}">
+                            <a href="{{ route('admin.chat.live') }}" class="nav-link {{ request()->routeIs('admin.chat.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-comments"></i>
                                 <p>Chat & Mensajería</p>
                             </a>
@@ -385,15 +336,6 @@
         <div class="content-wrapper">
             @yield('content')
         </div>
-
-        <!-- Footer -->
-        <footer class="main-footer">
-            <strong>Copyright &copy; {{ date('Y') }} <a href="#">MuniApp</a>.</strong>
-            Todos los derechos reservados.
-            <div class="float-right d-none d-sm-inline-block">
-                <b>Versión</b> 2.0.0
-            </div>
-        </footer>
     </div>
 
     <!-- Scripts -->
@@ -401,39 +343,98 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
     
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    
     <!-- Real-time notifications -->
     <script>
-        // Echo setup for real-time notifications
+        // Global configuration from Laravel
+        window.MuniAppConfig = {
+            baseUrl: '{{ url('/') }}',
+            assetUrl: '{{ asset('') }}',
+            imagesPath: '{{ url('images') }}'
+        };
+
+        // Initialize toastr
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "3000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+
+        // Echo setup for real-time notifications (only if Echo is available)
         @if(auth()->check())
-        Echo.private('App.Models.User.{{ auth()->id() }}')
-            .notification((notification) => {
-                // Handle real-time notifications
-                console.log('Nueva notificación:', notification);
-                showNotification(notification);
-            });
+        if (typeof Echo !== 'undefined') {
+            Echo.private('App.Models.User.{{ auth()->id() }}')
+                .notification((notification) => {
+                    // Handle real-time notifications
+                    console.log('Nueva notificación:', notification);
+                    showNotification(notification);
+                });
+        }
         @endif
         
         function showNotification(notification) {
-            // Create toast notification
-            const toast = $(`
-                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="toast-header">
-                        <i class="fas fa-bell text-primary"></i>
-                        <strong class="mr-auto ml-2">MuniApp</strong>
-                        <small>ahora</small>
-                        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast">
-                            <span>&times;</span>
-                        </button>
-                    </div>
-                    <div class="toast-body">
-                        ${notification.message}
-                    </div>
-                </div>
-            `);
-            
-            $('.toast-container').append(toast);
-            toast.toast('show');
+            // Use toastr for notifications
+            if (typeof toastr !== 'undefined') {
+                toastr.info(notification.message, 'MuniApp');
+            } else {
+                console.log('Notification:', notification.message);
+            }
         }
+
+        // Global function to update logo throughout the system
+        window.updateSystemLogo = function() {
+            const logoFormats = ['jpg', 'png', 'svg', 'jpeg', 'gif'];
+            
+            function tryLoadLogo(index) {
+                if (index >= logoFormats.length) {
+                    return;
+                }
+                
+                const format = logoFormats[index];
+                const logoUrl = `${window.MuniAppConfig.imagesPath}/logo.${format}?v=${Date.now()}`;
+                const img = new Image();
+                
+                img.onload = function() {
+                    // Update all logo elements in the page
+                    const logoElements = document.querySelectorAll('.system-logo, #system-logo, .app-logo');
+                    logoElements.forEach(element => {
+                        if (element.tagName === 'IMG') {
+                            element.src = logoUrl;
+                        } else {
+                            element.style.backgroundImage = `url(${logoUrl})`;
+                        }
+                    });
+                    
+                    // Update sidebar logo if exists
+                    const sidebarLogo = document.querySelector('.brand-link img');
+                    if (sidebarLogo) {
+                        sidebarLogo.src = logoUrl;
+                    }
+                };
+                
+                img.onerror = function() {
+                    tryLoadLogo(index + 1);
+                };
+                
+                img.src = logoUrl;
+            }
+            
+            tryLoadLogo(0);
+        };
     </script>
     
     @stack('scripts')

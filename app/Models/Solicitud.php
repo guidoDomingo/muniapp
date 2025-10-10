@@ -42,6 +42,63 @@ class Solicitud extends Model
         static::creating(function ($solicitud) {
             $solicitud->tracking_code = 'SOL-' . date('Y') . '-' . str_pad(random_int(1, 99999), 5, '0', STR_PAD_LEFT);
         });
+        
+        static::created(function ($solicitud) {
+            // Registrar creación en el historial
+            SolicitudHistory::createEntry(
+                $solicitud->id,
+                $solicitud->user_id,
+                'created',
+                null,
+                $solicitud->estado,
+                'Solicitud creada por el ciudadano',
+                [
+                    'tramite' => $solicitud->tramite->nombre ?? 'N/A',
+                    'ip' => request()->ip(),
+                    'user_agent' => request()->userAgent()
+                ]
+            );
+        });
+        
+        static::updating(function ($solicitud) {
+            // Detectar cambios de estado
+            if ($solicitud->isDirty('estado')) {
+                $oldEstado = $solicitud->getOriginal('estado');
+                $newEstado = $solicitud->estado;
+                
+                SolicitudHistory::createEntry(
+                    $solicitud->id,
+                    auth()->id() ?? 1, // Default a admin si no hay usuario autenticado
+                    'status_changed',
+                    $oldEstado,
+                    $newEstado,
+                    "Estado cambiado de '$oldEstado' a '$newEstado'",
+                    [
+                        'ip' => request()->ip(),
+                        'user_agent' => request()->userAgent()
+                    ]
+                );
+            }
+            
+            // Detectar asignaciones
+            if ($solicitud->isDirty('assigned_to')) {
+                $oldAssigned = $solicitud->getOriginal('assigned_to');
+                $newAssigned = $solicitud->assigned_to;
+                
+                SolicitudHistory::createEntry(
+                    $solicitud->id,
+                    auth()->id() ?? 1,
+                    'assigned',
+                    $oldAssigned ? User::find($oldAssigned)->name : null,
+                    $newAssigned ? User::find($newAssigned)->name : null,
+                    'Solicitud reasignada',
+                    [
+                        'old_user_id' => $oldAssigned,
+                        'new_user_id' => $newAssigned
+                    ]
+                );
+            }
+        });
     }
 
     public function tramite()

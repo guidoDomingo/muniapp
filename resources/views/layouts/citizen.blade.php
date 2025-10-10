@@ -280,7 +280,7 @@
     <div class="sidebar" id="sidebar">
         <!-- Sidebar Header -->
         <div class="sidebar-header">
-            <img src="{{ asset('src/assets/img/caacupe.png') }}" alt="Logo" class="sidebar-logo">
+            <img src="{{ url('images/logo.jpg') }}" alt="Logo" class="sidebar-logo system-logo" onerror="this.style.display='none'">
             <h1 class="sidebar-title">MuniApp</h1>
             <p class="sidebar-subtitle">Sistema Municipal Digital</p>
         </div>
@@ -419,6 +419,7 @@
                 <button class="mobile-toggle" onclick="toggleSidebar()">
                     <i data-feather="menu"></i>
                 </button>
+                <img src="{{ url('images/logo.jpg') }}" alt="Logo" class="system-logo me-3" style="height: 30px; width: auto;" onerror="this.style.display='none'">
                 <h2 class="mb-0 text-muted">Bienvenido, {{ Auth::user()->name }}</h2>
             </div>
             
@@ -474,6 +475,14 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
+        // Global configuration from Laravel
+        window.MuniAppConfig = {
+            baseUrl: '{{ url('/') }}',
+            assetUrl: '{{ asset('') }}',
+            imagesPath: '{{ url('images') }}'
+        };
+        console.log('MuniApp Config:', window.MuniAppConfig);
+
         // Initialize Feather Icons
         feather.replace();
 
@@ -505,6 +514,61 @@
                 }
             });
         });
+        
+        // Global logo update function
+        window.updateSystemLogo = function() {
+            const timestamp = new Date().getTime();
+            const logoElements = document.querySelectorAll('.system-logo, #system-logo, .app-logo');
+            
+            // Lista de formatos de logo a verificar en orden de prioridad
+            const logoFormats = ['jpg', 'png', 'svg'];
+            
+            logoFormats.forEach(format => {
+                const logoUrl = `${window.MuniAppConfig.imagesPath}/logo.${format}?v=${timestamp}`;
+                
+                // Verificar si el archivo existe haciendo una petición HEAD
+                fetch(logoUrl, { method: 'HEAD' })
+                    .then(response => {
+                        if (response.ok) {
+                            logoElements.forEach(element => {
+                                if (element.tagName === 'IMG') {
+                                    element.src = logoUrl;
+                                }
+                            });
+                            
+                            // También actualizar elementos con estilos background-image
+                            document.querySelectorAll('.navbar-brand, .brand-link').forEach(element => {
+                                if (element.style.backgroundImage) {
+                                    element.style.backgroundImage = `url('${logoUrl}')`;
+                                }
+                            });
+                            
+                            // Update all navbar and top-bar logos
+                            const navbarLogos = document.querySelectorAll('.navbar img, .top-navbar img');
+                            navbarLogos.forEach(img => {
+                                if (img.classList.contains('system-logo')) {
+                                    img.src = logoUrl;
+                                }
+                            });
+                            
+                            // Force update ALL img elements that might contain logos
+                            const allImages = document.querySelectorAll('img');
+                            allImages.forEach(img => {
+                                if (img.src && (img.src.includes('/images/logo.') || img.alt.toLowerCase().includes('logo'))) {
+                                    const oldSrc = img.src;
+                                    img.src = logoUrl;
+                                    console.log('Force updated img:', oldSrc, '→', logoUrl);
+                                }
+                            });
+                            
+                            console.log('Citizen logos updated with:', logoUrl);
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Logo format not found:', format);
+                    });
+            });
+        };
     </script>
 
     @yield('scripts')

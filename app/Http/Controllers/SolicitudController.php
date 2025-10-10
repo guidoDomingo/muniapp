@@ -31,71 +31,102 @@ class SolicitudController extends Controller
 
     public function store(Request $request, $tramiteId)
     {
-
+        $tramite = Tramite::findOrFail($tramiteId);
         $campos = [];
 
-        if ($request->hasFile('documento_identidad')) {
-            $documento = $request->file('documento_identidad');
+        // Procesar campos dinámicos del formulario
+        if ($request->has('form_data') && $tramite->form_fields) {
+            foreach ($tramite->form_fields as $index => $field) {
+                $fieldName = "form_data.{$index}";
+                $fieldType = $field['type'] ?? 'text';
+                $fieldLabel = $field['label'] ?? "Campo {$index}";
 
-            if ($documento->isValid()) {
-                $disk = Storage::disk('public');
-                $filename = uniqid() . '_' . $documento->getClientOriginalName(); // Genera un nombre único
-                $path = 'documentos/' . $filename;
+                if ($request->has("form_data.{$index}")) {
+                    $value = $request->input("form_data.{$index}");
 
-                // Guardar el archivo en la ubicación especificada
-                $disk->put($path, file_get_contents($documento));
+                    // Manejar archivos
+                    if ($fieldType === 'file' && $request->hasFile("form_data.{$index}")) {
+                        $file = $request->file("form_data.{$index}");
+                        if ($file->isValid()) {
+                            $disk = Storage::disk('public');
+                            
+                            // Crear nombre seguro para el archivo
+                            $extension = $file->getClientOriginalExtension();
+                            $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                            $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $originalName);
+                            $filename = uniqid() . '_' . $safeName . '.' . $extension;
+                            
+                            $path = 'documentos/' . $filename;
+                            $disk->put($path, file_get_contents($file));
+                            $value = $path;
+                        }
+                    }
 
-                $campos[] = [
-                    'nombre' => 'documento_vigencia',
-                    'tipo' => 'file',
-                    'valor' => $path
-                ];
-            } else {
-                return redirect()->back()->withErrors(['documento_identidad' => 'El archivo no es válido.']);
-            }
-        }
-
-
-
-        // Verificar y manejar el archivo imagen_usuario
-        if ($request->hasFile('imagen_usuario')) {
-
-            foreach ($request->file('imagen_usuario') as $imagen) {
-
-                //$imagen = $request->file('imagen_usuario');
-
-                if ($imagen->isValid()) {
-                    // Usar el disco público para guardar la imagen
-                    $disk = Storage::disk('public');
-                    $filename = uniqid() . '_' . $imagen->getClientOriginalName(); // Generar un nombre único para el archivo
-                    $path = 'imagenes/' . $filename; // Definir el path donde se guardará el archivo
-
-                    // Obtener la ruta completa del directorio de almacenamiento público
-                    $fullPath = storage_path('app/public/') . $path;
-
-                    // Mover el archivo manualmente a la ubicación especificada
-                    $imagen->move(dirname($fullPath), $filename);
+                    // Manejar arrays (checkbox)
+                    if (is_array($value)) {
+                        $value = implode(', ', $value);
+                    }
 
                     $campos[] = [
-                        'nombre' => 'imagen_zona',
-                        'tipo' => 'image',
-                        'valor' => $path
+                        'nombre' => $fieldLabel,
+                        'tipo' => $fieldType,
+                        'valor' => $value
                     ];
                 }
             }
         } else {
-                return redirect()->back()->withErrors(['imagen_usuario' => 'El archivo no es válido.']);
-        }
+            // Fallback para el formulario estático (retrocompatibilidad)
+            if ($request->hasFile('documento_identidad')) {
+                $documento = $request->file('documento_identidad');
+                if ($documento->isValid()) {
+                    $disk = Storage::disk('public');
+                    
+                    // Crear nombre seguro para el archivo
+                    $extension = $documento->getClientOriginalExtension();
+                    $originalName = pathinfo($documento->getClientOriginalName(), PATHINFO_FILENAME);
+                    $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $originalName);
+                    $filename = uniqid() . '_' . $safeName . '.' . $extension;
+                    
+                    $path = 'documentos/' . $filename;
+                    $disk->put($path, file_get_contents($documento));
+                    $campos[] = [
+                        'nombre' => 'documento_vigencia',
+                        'tipo' => 'file',
+                        'valor' => $path
+                    ];
+                }
+            }
 
+            if ($request->hasFile('imagen_usuario')) {
+                foreach ($request->file('imagen_usuario') as $imagen) {
+                    if ($imagen->isValid()) {
+                        $disk = Storage::disk('public');
+                        
+                        // Crear nombre seguro para la imagen
+                        $extension = $imagen->getClientOriginalExtension();
+                        $originalName = pathinfo($imagen->getClientOriginalName(), PATHINFO_FILENAME);
+                        $safeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $originalName);
+                        $filename = uniqid() . '_' . $safeName . '.' . $extension;
+                        
+                        $path = 'imagenes/' . $filename;
+                        $fullPath = storage_path('app/public/') . $path;
+                        $imagen->move(dirname($fullPath), $filename);
+                        $campos[] = [
+                            'nombre' => 'imagen_zona',
+                            'tipo' => 'image',
+                            'valor' => $path
+                        ];
+                    }
+                }
+            }
 
-
-        // Verificar y manejar el campo de texto nombre_usuario
-        if ($request->has('nombre_usuario')) {
-            $campos[] = [
-                'nombre' => 'nombre_comision',
-                'tipo' => 'text',
-                'valor' => $request->input('nombre_usuario')
-            ];
+            if ($request->has('nombre_usuario')) {
+                $campos[] = [
+                    'nombre' => 'nombre_comision',
+                    'tipo' => 'text',
+                    'valor' => $request->input('nombre_usuario')
+                ];
+            }
         }
 
         // Construcción del array final
@@ -111,10 +142,10 @@ class SolicitudController extends Controller
         $solicitud->detalles = $request->input('detalles');
         $solicitud->latitud = $request->latitud;
         $solicitud->longitud = $request->longitud;
-        // $solicitud->comentario = $request->comentarios;
         $solicitud->save();
 
-        return redirect()->route('solicitudes.index');
+        return redirect()->route('solicitudes.index')
+            ->with('success', 'Solicitud enviada exitosamente.');
     }
 
     public function show($id)

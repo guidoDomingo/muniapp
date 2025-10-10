@@ -129,8 +129,65 @@ class AdminDashboardController extends Controller
     {
         // Already protected by admin role middleware in routes
         
-        // Here you would implement the logic to update system settings
-        // For now, we'll just return a success response
+        $request->validate([
+            'app_name' => 'nullable|string|max:255',
+            'municipality_name' => 'nullable|string|max:255',
+            'contact_email' => 'nullable|email|max:255',
+            'contact_phone' => 'nullable|string|max:50',
+            'municipality_address' => 'nullable|string|max:500',
+            'timezone' => 'nullable|string|max:50',
+            'language' => 'nullable|string|max:10',
+            'system_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        $settings = [];
+
+        // Process regular settings
+        if ($request->filled('app_name')) {
+            $settings['app_name'] = $request->app_name;
+        }
+        if ($request->filled('municipality_name')) {
+            $settings['municipality_name'] = $request->municipality_name;
+        }
+        if ($request->filled('contact_email')) {
+            $settings['contact_email'] = $request->contact_email;
+        }
+        if ($request->filled('contact_phone')) {
+            $settings['contact_phone'] = $request->contact_phone;
+        }
+        if ($request->filled('municipality_address')) {
+            $settings['municipality_address'] = $request->municipality_address;
+        }
+        if ($request->filled('timezone')) {
+            $settings['timezone'] = $request->timezone;
+        }
+        if ($request->filled('language')) {
+            $settings['language'] = $request->language;
+        }
+
+        // Handle logo upload
+        if ($request->hasFile('system_logo')) {
+            $logo = $request->file('system_logo');
+            
+            // Delete old logo files if they exist
+            $logoExtensions = ['png', 'jpg', 'jpeg', 'gif', 'svg'];
+            foreach ($logoExtensions as $ext) {
+                $oldLogoPath = public_path("images/logo.{$ext}");
+                if (file_exists($oldLogoPath)) {
+                    unlink($oldLogoPath);
+                }
+            }
+            
+            // Store new logo with original extension
+            $logoExtension = $logo->getClientOriginalExtension();
+            $logoName = 'logo.' . $logoExtension;
+            $logo->move(public_path('images'), $logoName);
+            
+            $settings['system_logo'] = 'images/' . $logoName;
+        }
+
+        // Here you could save settings to database or config files
+        // For now, we'll simulate success
         
         return redirect()->route('admin.settings')->with('success', 'Configuración actualizada exitosamente');
     }

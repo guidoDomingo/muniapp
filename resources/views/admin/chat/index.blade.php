@@ -199,10 +199,10 @@
                                     </div>
                                     <div class="dropdown">
                                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" 
-                                                type="button" data-toggle="dropdown">
+                                                type="button" data-bs-toggle="dropdown" aria-expanded="false">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
-                                        <div class="dropdown-menu dropdown-menu-right">
+                                        <div class="dropdown-menu dropdown-menu-end">
                                             <a class="dropdown-item" href="#" onclick="moderateMessage({{ $chat->id }}, 'warn')">
                                                 <i class="fas fa-exclamation-triangle text-warning"></i> Advertir usuario
                                             </a>
@@ -243,9 +243,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Moderar Mensaje(s)</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
@@ -258,7 +256,7 @@
                 </p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="confirmModeration">Confirmar</button>
             </div>
         </div>
@@ -283,13 +281,15 @@ function moderateSelected(action) {
     }
     
     currentAction = action;
-    $('#moderationModal').modal('show');
+    const modal = new bootstrap.Modal(document.getElementById('moderationModal'));
+    modal.show();
 }
 
 function moderateMessage(chatId, action) {
     selectedChatIds = [chatId];
     currentAction = action;
-    $('#moderationModal').modal('show');
+    const modal = new bootstrap.Modal(document.getElementById('moderationModal'));
+    modal.show();
 }
 
 $('#confirmModeration').click(function() {
@@ -305,7 +305,8 @@ $('#confirmModeration').click(function() {
             reason: reason
         },
         success: function(response) {
-            $('#moderationModal').modal('hide');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('moderationModal'));
+            modal.hide();
             if (response.success) {
                 location.reload();
             } else {

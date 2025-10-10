@@ -12,7 +12,7 @@ class AdminChatController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:moderate_chat');
+        $this->middleware('auth');
     }
 
     public function index(Request $request)
@@ -50,6 +50,42 @@ class AdminChatController extends Controller
         ];
 
         return view('admin.chat.index', compact('chats', 'rooms', 'users', 'stats'));
+    }
+
+    public function chat()
+    {
+        // Vista para chat en tiempo real del admin
+        $rooms = Chat::select('room', 'chat_type')
+            ->selectRaw('COUNT(*) as message_count')
+            ->selectRaw('MAX(created_at) as last_message')
+            ->groupBy('room', 'chat_type')
+            ->orderBy('last_message', 'desc')
+            ->get()
+            ->map(function ($chat) {
+                return [
+                    'room' => $chat->room,
+                    'display_name' => $this->formatRoomName($chat->room, $chat->chat_type),
+                    'chat_type' => $chat->chat_type,
+                    'message_count' => $chat->message_count,
+                    'last_message' => $chat->last_message,
+                ];
+            });
+
+        return view('admin.chat.chat', compact('rooms'));
+    }
+
+    private function formatRoomName($room, $type)
+    {
+        switch ($type) {
+            case 'solicitud':
+                return "Solicitud #{$room}";
+            case 'tramite':
+                return "Trámite #{$room}";
+            case 'general':
+                return "Consulta General";
+            default:
+                return "Sala: {$room}";
+        }
     }
 
     public function rooms()

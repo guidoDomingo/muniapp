@@ -37,11 +37,11 @@
                                 {{ ucfirst(str_replace('_', ' ', $solicitud->estado)) }}
                             </span>
                             <div class="btn-group ml-2">
-                                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fas fa-cogs"></i> Acciones
                                 </button>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="{{ route('admin.solicitudes.edit', $solicitud) }}">
+                                <div class="dropdown-menu dropdown-menu-end">
+                                    <a class="dropdown-item" href="{{ route('admin.solicitudes.edit', $solicitud->id) }}">
                                         <i class="fas fa-edit"></i> Editar
                                     </a>
                                     <div class="dropdown-divider"></div>
@@ -79,6 +79,10 @@
                                         <span class="info-box-text">Fecha de Solicitud</span>
                                         <span class="info-box-number">{{ $solicitud->created_at->format('d/m/Y') }}</span>
                                         <small>{{ $solicitud->created_at->format('H:i') }}</small>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-clock"></i> {{ $solicitud->created_at->diffForHumans() }}
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -154,17 +158,17 @@
                             <div class="col-md-12">
                                 <h5>Descripción:</h5>
                                 <div class="border p-3 bg-light rounded">
-                                    {{ $solicitud->detalle }}
+                                    {{ $solicitud->detalles ?: 'No se proporcionó descripción' }}
                                 </div>
                             </div>
                         </div>
 
-                        @if($solicitud->observaciones)
+                        @if($solicitud->comentario)
                             <div class="row mb-3">
                                 <div class="col-md-12">
-                                    <h5>Observaciones:</h5>
+                                    <h5>Comentarios:</h5>
                                     <div class="border p-3 bg-light rounded">
-                                        {{ $solicitud->observaciones }}
+                                        {{ $solicitud->comentario }}
                                     </div>
                                 </div>
                             </div>
@@ -218,42 +222,116 @@
                     </div>
                 </div>
 
-                <!-- Attachments -->
-                @if($solicitud->adjuntos && count($solicitud->adjuntos) > 0)
+                <!-- Datos del Formulario Dinámico -->
+                @php
+                    $formData = json_decode($solicitud->formulario, true);
+                    $campos = $formData['campos'] ?? [];
+                @endphp
+                @if(count($campos) > 0)
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">
-                                <i class="fas fa-paperclip mr-1"></i>
-                                Archivos Adjuntos
+                                <i class="fas fa-wpforms mr-1"></i>
+                                Datos Enviados por el Ciudadano
                             </h3>
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                @foreach($solicitud->adjuntos as $archivo)
-                                    <div class="col-md-4 mb-3">
-                                        <div class="card">
-                                            <div class="card-body text-center">
-                                                <i class="fas fa-file fa-3x text-primary mb-2"></i>
-                                                <h6 class="card-title">{{ $archivo->nombre ?? 'archivo.pdf' }}</h6>
-                                                <p class="card-text">
-                                                    <small class="text-muted">
-                                                        Tamaño: {{ $archivo->tamaño ?? '0' }} KB<br>
-                                                        Subido: {{ $archivo->created_at->format('d/m/Y') ?? 'N/A' }}
-                                                    </small>
-                                                </p>
-                                                <div class="btn-group" role="group">
-                                                    <a href="{{ $archivo->url ?? '#' }}" class="btn btn-sm btn-primary" target="_blank">
-                                                        <i class="fas fa-eye"></i> Ver
-                                                    </a>
-                                                    <a href="{{ $archivo->download_url ?? '#' }}" class="btn btn-sm btn-success">
-                                                        <i class="fas fa-download"></i> Descargar
-                                                    </a>
-                                                </div>
+                                @foreach($campos as $index => $campo)
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-group">
+                                            <label class="font-weight-bold text-primary">
+                                                {{ $campo['nombre'] }}:
+                                            </label>
+                                            <div class="mt-2">
+                                                @switch($campo['tipo'])
+                                                    @case('file')
+                                                        @if($campo['valor'])
+                                                            <div class="file-preview border rounded p-3 bg-light">
+                                                                <div class="d-flex align-items-center">
+                                                                    <i class="fas fa-file-pdf fa-2x text-danger mr-3"></i>
+                                                                    <div class="flex-grow-1">
+                                                                        <strong>{{ basename($campo['valor']) }}</strong>
+                                                                        <br>
+                                                                        <small class="text-muted">Documento adjunto</small>
+                                                                    </div>
+                                                                    <a href="{{ url('storage/' . $campo['valor']) }}" 
+                                                                       class="btn btn-sm btn-outline-primary" 
+                                                                       target="_blank">
+                                                                        <i class="fas fa-download me-1"></i> Descargar
+                                                                    </a>
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            <span class="text-muted">No se adjuntó archivo</span>
+                                                        @endif
+                                                        @break
+                                                        
+                                                    @case('image')
+                                                        @if($campo['valor'])
+                                                            <div class="image-preview">
+                                                                <img src="{{ url('storage/' . $campo['valor']) }}" 
+                                                                     class="img-thumbnail mb-2" 
+                                                                     style="max-width: 200px; max-height: 200px;"
+                                                                     alt="Imagen adjunta">
+                                                                <br>
+                                                                <a href="{{ url('storage/' . $campo['valor']) }}" 
+                                                                   class="btn btn-sm btn-outline-primary" 
+                                                                   target="_blank">
+                                                                    <i class="fas fa-eye me-1"></i> Ver tamaño completo
+                                                                </a>
+                                                            </div>
+                                                        @else
+                                                            <span class="text-muted">No se adjuntó imagen</span>
+                                                        @endif
+                                                        @break
+                                                        
+                                                    @case('textarea')
+                                                        <div class="border rounded p-3 bg-light">
+                                                            {!! nl2br(e($campo['valor'])) !!}
+                                                        </div>
+                                                        @break
+                                                        
+                                                    @default
+                                                        <div class="border rounded p-2 bg-light">
+                                                            <strong>{{ $campo['valor'] ?: 'No especificado' }}</strong>
+                                                        </div>
+                                                @endswitch
                                             </div>
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
+                        </div>
+                    </div>
+                @endif
+
+                <!-- Ubicación de la Solicitud -->
+                @if($solicitud->latitud && $solicitud->longitud)
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                Ubicación de la Solicitud
+                            </h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <strong>Coordenadas:</strong><br>
+                                    <span class="text-muted">
+                                        Latitud: {{ $solicitud->latitud }}<br>
+                                        Longitud: {{ $solicitud->longitud }}
+                                    </span>
+                                </div>
+                                <div class="col-md-6">
+                                    <div id="location-address">
+                                        <strong>Dirección:</strong><br>
+                                        <span class="text-muted">Obteniendo dirección...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="mapa" style="width: 100%; height: 400px; border-radius: 8px;"></div>
                         </div>
                     </div>
                 @endif
@@ -271,7 +349,10 @@
                     </div>
                     <div class="card-body">
                         <div class="timeline">
-                            @forelse($solicitud->historial ?? [] as $historial)
+                            @php
+                                $historialUnico = $solicitud->history->unique('id')->sortBy('created_at');
+                            @endphp
+                            @forelse($historialUnico as $historial)
                                 <div class="time-label">
                                     <span class="bg-{{ $historial->status_color ?? 'primary' }}">
                                         {{ $historial->created_at->format('d/m/Y') }}
@@ -282,13 +363,16 @@
                                     <div class="timeline-item">
                                         <span class="time">
                                             <i class="fas fa-clock"></i> {{ $historial->created_at->format('H:i') }}
+                                            <small class="text-muted ml-2">
+                                                ({{ $historial->created_at->diffForHumans() }})
+                                            </small>
                                         </span>
                                         <h3 class="timeline-header">
-                                            {{ ucfirst(str_replace('_', ' ', $historial->status ?? 'Estado actualizado')) }}
+                                            {{ ucfirst(str_replace('_', ' ', $historial->action ?? 'Estado actualizado')) }}
                                         </h3>
-                                        @if($historial->comments)
+                                        @if($historial->description)
                                             <div class="timeline-body">
-                                                {{ $historial->comments }}
+                                                {{ $historial->description }}
                                             </div>
                                         @endif
                                         @if($historial->user)
@@ -320,13 +404,13 @@
                         <div class="row">
                             <div class="col-6">
                                 <div class="description-block">
-                                    <h5 class="description-header">{{ $solicitud->days_since_created ?? 0 }}</h5>
+                                    <h5 class="description-header">{{ $solicitud->created_at->diffInDays(now()) }}</h5>
                                     <span class="description-text">Días desde creación</span>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="description-block">
-                                    <h5 class="description-header">{{ $solicitud->days_since_updated ?? 0 }}</h5>
+                                    <h5 class="description-header">{{ $solicitud->updated_at->diffInDays(now()) }}</h5>
                                     <span class="description-text">Días sin actualizar</span>
                                 </div>
                             </div>
@@ -334,14 +418,14 @@
                         <div class="row mt-3">
                             <div class="col-6">
                                 <div class="description-block">
-                                    <h5 class="description-header">{{ $solicitud->total_comments ?? 0 }}</h5>
-                                    <span class="description-text">Comentarios</span>
+                                    <h5 class="description-header">{{ $solicitud->history->count() }}</h5>
+                                    <span class="description-text">Cambios de estado</span>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="description-block">
-                                    <h5 class="description-header">{{ $solicitud->file_count ?? 0 }}</h5>
-                                    <span class="description-text">Archivos</span>
+                                    <h5 class="description-header">{{ count(json_decode($solicitud->formulario, true)['campos'] ?? []) }}</h5>
+                                    <span class="description-text">Campos del formulario</span>
                                 </div>
                             </div>
                         </div>
@@ -361,7 +445,7 @@
                             <a href="{{ route('admin.solicitudes.index') }}" class="btn btn-outline-secondary btn-block">
                                 <i class="fas fa-list"></i> Volver a la Lista
                             </a>
-                            <a href="{{ route('admin.solicitudes.edit', $solicitud) }}" class="btn btn-outline-primary btn-block">
+                            <a href="{{ route('admin.solicitudes.edit', $solicitud->id) }}" class="btn btn-outline-primary btn-block">
                                 <i class="fas fa-edit"></i> Editar Solicitud
                             </a>
                             <button type="button" class="btn btn-outline-success btn-block" onclick="openChat()">
@@ -379,24 +463,22 @@
 </section>
 
 <!-- Status Update Modal -->
-<div class="modal fade" id="statusModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Actualizar Estado</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <h5 class="modal-title" id="statusModalLabel">Actualizar Estado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="status_comments">Comentarios</label>
                     <textarea class="form-control" id="status_comments" rows="3" 
                               placeholder="Comentarios sobre el cambio de estado..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="confirmStatusUpdate">Actualizar</button>
             </div>
         </div>
@@ -404,17 +486,15 @@
 </div>
 
 <!-- Assign Modal -->
-<div class="modal fade" id="assignModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Asignar Solicitud</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <h5 class="modal-title" id="assignModalLabel">Asignar Solicitud</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="assign_user">Asignar a</label>
                     <select class="form-control" id="assign_user">
                         <option value="">Seleccionar usuario...</option>
@@ -423,14 +503,14 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="assign_comments">Comentarios</label>
                     <textarea class="form-control" id="assign_comments" rows="3" 
                               placeholder="Comentarios sobre la asignación..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="confirmAssign">Asignar</button>
             </div>
         </div>
@@ -438,72 +518,173 @@
 </div>
 @endsection
 
+@push('styles')
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""/>
+<style>
+.file-preview {
+    transition: all 0.3s ease;
+}
+
+.file-preview:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.image-preview img {
+    transition: transform 0.2s ease;
+}
+
+.image-preview img:hover {
+    transform: scale(1.05);
+}
+
+.leaflet-container {
+    border: 2px solid #dee2e6;
+    border-radius: 8px !important;
+}
+</style>
+@endpush
+
 @push('scripts')
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+
+<!-- Leaflet Map Manager -->
+<script src="{{ asset('js/leaflet-map-manager.js') }}"></script>
+
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    @if($solicitud->latitud && $solicitud->longitud)
+        // Inicializar mapa de visualización si hay coordenadas
+        console.log('Inicializando mapa de visualización...');
+        
+        const initDisplayMap = () => {
+            if (window.LeafletMapManager) {
+                const lat = {{ $solicitud->latitud }};
+                const lng = {{ $solicitud->longitud }};
+                
+                const map = window.LeafletMapManager.initDisplayMap('mapa', lat, lng, {
+                    zoom: 15
+                });
+                
+                if (map) {
+                    console.log('Mapa de visualización inicializado correctamente');
+                    
+                    // Obtener dirección usando geocodificación inversa
+                    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data && data.display_name) {
+                                document.getElementById('location-address').innerHTML = 
+                                    `<strong>Dirección:</strong><br><span class="text-muted">${data.display_name}</span>`;
+                            } else {
+                                document.getElementById('location-address').innerHTML = 
+                                    `<strong>Ubicación:</strong><br><span class="text-muted">Lat: ${lat}, Lng: ${lng}</span>`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error obteniendo dirección:', error);
+                            document.getElementById('location-address').innerHTML = 
+                                `<strong>Ubicación:</strong><br><span class="text-muted">Lat: ${lat}, Lng: ${lng}</span>`;
+                        });
+                } else {
+                    console.error('Error inicializando el mapa de visualización');
+                }
+            } else {
+                console.log('Esperando a que se cargue LeafletMapManager...');
+                setTimeout(initDisplayMap, 100);
+            }
+        };
+        
+        initDisplayMap();
+    @endif
+});
+
+// Funciones para gestión de solicitudes
+// Funciones para gestión de solicitudes
 let currentStatus = null;
 
 function updateStatus(status) {
     currentStatus = status;
-    $('#statusModal').modal('show');
+    const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
+    statusModal.show();
 }
 
 function showAssignModal() {
-    $('#assignModal').modal('show');
+    const assignModal = new bootstrap.Modal(document.getElementById('assignModal'));
+    assignModal.show();
 }
 
-$('#confirmStatusUpdate').click(function() {
-    const comments = $('#status_comments').val();
+document.getElementById('confirmStatusUpdate').addEventListener('click', function() {
+    const comments = document.getElementById('status_comments').value;
     
-    $.ajax({
-        url: `/admin/solicitudes/{{ $solicitud->id }}/status`,
+    fetch(`/admin/solicitudes/{{ $solicitud->id }}/status`, {
         method: 'PATCH',
-        data: {
-            _token: '{{ csrf_token() }}',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
             status: currentStatus,
             comments: comments
-        },
-        success: function(response) {
-            $('#statusModal').modal('hide');
-            if (response.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + response.message);
-            }
-        },
-        error: function() {
-            alert('Error al actualizar el estado');
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const statusModal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
+        statusModal.hide();
+        
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al actualizar el estado');
     });
 });
 
-$('#confirmAssign').click(function() {
-    const userId = $('#assign_user').val();
-    const comments = $('#assign_comments').val();
+document.getElementById('confirmAssign').addEventListener('click', function() {
+    const userId = document.getElementById('assign_user').value;
+    const comments = document.getElementById('assign_comments').value;
     
     if (!userId) {
         alert('Selecciona un usuario');
         return;
     }
     
-    $.ajax({
-        url: `/admin/solicitudes/{{ $solicitud->id }}/assign`,
+    fetch(`/admin/solicitudes/{{ $solicitud->id }}/assign`, {
         method: 'PATCH',
-        data: {
-            _token: '{{ csrf_token() }}',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
             user_id: userId,
             comments: comments
-        },
-        success: function(response) {
-            $('#assignModal').modal('hide');
-            if (response.success) {
-                location.reload();
-            } else {
-                alert('Error: ' + response.message);
-            }
-        },
-        error: function() {
-            alert('Error al asignar la solicitud');
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const assignModal = bootstrap.Modal.getInstance(document.getElementById('assignModal'));
+        assignModal.hide();
+        
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al asignar la solicitud');
     });
 });
 

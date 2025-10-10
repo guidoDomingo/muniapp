@@ -12,6 +12,39 @@ use App\Http\Controllers\Admin\AdminSolicitudController;
 use App\Http\Controllers\Admin\AdminChatController;
 use App\Http\Controllers\Admin\AdminDepartmentController;
 
+// Route to serve images
+Route::get('/images/{filename}', function ($filename) {
+    $path = public_path('images/' . $filename);
+    
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    
+    $file = file_get_contents($path);
+    $type = mime_content_type($path);
+    
+    return response($file, 200)->header('Content-Type', $type);
+})->where('filename', '.*');
+
+// Route to serve storage files (documentos)
+Route::get('/storage/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+    
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    
+    $file = file_get_contents($fullPath);
+    $type = mime_content_type($fullPath);
+    
+    // For downloads, add proper headers
+    $filename = basename($fullPath);
+    
+    return response($file, 200)
+        ->header('Content-Type', $type)
+        ->header('Content-Disposition', 'inline; filename="' . $filename . '"');
+})->where('path', '.*');
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -25,6 +58,8 @@ use App\Http\Controllers\Admin\AdminDepartmentController;
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\QrCodeController;
+use App\Http\Controllers\CommissionDashboardController;
+use App\Http\Controllers\SSEController;
 
 // Mostrar el formulario de registro
 Route::get('register', [AuthController::class, 'showRegistrationForm'])->name('registercreate');
@@ -76,6 +111,10 @@ Route::middleware('auth')->group(function () {
     Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('chat', [ChatController::class, 'store'])->name('chat.store');
     Route::get('chat/{room}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
+    
+    // Rutas SSE para tiempo real
+    Route::get('chat/{room}/stream', [SSEController::class, 'chatStream'])->name('chat.stream');
+    Route::get('sse/status', [SSEController::class, 'status'])->name('sse.status');
 });
 
 // Admin Routes - Protected by admin role
@@ -91,12 +130,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('tramites', AdminTramiteController::class);
     
     // Solicitudes Management
-    Route::resource('solicitudes', AdminSolicitudController::class);
+    Route::get('solicitudes', [AdminSolicitudController::class, 'index'])->name('solicitudes.index');
+    Route::get('solicitudes/create', [AdminSolicitudController::class, 'create'])->name('solicitudes.create');
+    Route::post('solicitudes', [AdminSolicitudController::class, 'store'])->name('solicitudes.store');
+    Route::get('solicitudes/{solicitud}', [AdminSolicitudController::class, 'show'])->name('solicitudes.show');
+    Route::get('solicitudes/{solicitud}/edit', [AdminSolicitudController::class, 'edit'])->name('solicitudes.edit');
+    Route::put('solicitudes/{solicitud}', [AdminSolicitudController::class, 'update'])->name('solicitudes.update');
+    Route::delete('solicitudes/{solicitud}', [AdminSolicitudController::class, 'destroy'])->name('solicitudes.destroy');
     Route::patch('solicitudes/{solicitud}/status', [AdminSolicitudController::class, 'updateStatus'])->name('solicitudes.update-status');
     Route::post('solicitudes/{solicitud}/assign', [AdminSolicitudController::class, 'assignUser'])->name('solicitudes.assign');
     
     // Chat Management
     Route::get('chat', [AdminChatController::class, 'index'])->name('chat.index');
+    Route::get('chat/live', [AdminChatController::class, 'chat'])->name('chat.live');
     Route::get('chat/rooms', [AdminChatController::class, 'rooms'])->name('chat.rooms');
     Route::post('chat/moderate', [AdminChatController::class, 'moderate'])->name('chat.moderate');
     
@@ -110,9 +156,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
 // Commission Routes - Protected by commission role
 Route::middleware(['auth', 'role:commission|admin'])->prefix('commission')->name('commission.')->group(function () {
-    Route::get('/dashboard', function() { 
-        return view('commission.dashboard'); 
-    })->name('dashboard');
+    Route::get('/dashboard', [CommissionDashboardController::class, 'index'])->name('dashboard');
+    Route::post('solicitudes/{id}/approve', [CommissionDashboardController::class, 'aproveSolicitud'])->name('solicitudes.approve');
+    Route::post('solicitudes/{id}/reject', [CommissionDashboardController::class, 'rejectSolicitud'])->name('solicitudes.reject');
     
     Route::get('solicitudes', [SolicitudController::class, 'index'])->name('solicitudes.index');
     Route::get('solicitudes/{solicitud}', [SolicitudController::class, 'show'])->name('solicitudes.show');

@@ -87,7 +87,7 @@
                                     Configuración General
                                 </h3>
                             </div>
-                            <form id="generalForm">
+                            <form id="generalForm" enctype="multipart/form-data">
                                 <div class="card-body">
                                     <div class="row">
                                         <div class="col-md-6">
@@ -130,6 +130,47 @@
                                         <label for="municipality_address">Dirección del Municipio</label>
                                         <textarea class="form-control" id="municipality_address" name="municipality_address" 
                                                   rows="3" placeholder="Dirección completa del municipio">Calle Principal #123, Centro, Ciudad, País</textarea>
+                                    </div>
+
+                                    <!-- Logo Management Section -->
+                                    <div class="form-group">
+                                        <label for="system_logo">Logo del Sistema</label>
+                                        <div class="row">
+                                            <div class="col-md-8">
+                                                <div class="custom-file">
+                                                    <input type="file" class="custom-file-input" id="system_logo" 
+                                                           name="system_logo" accept="image/*">
+                                                    <label class="custom-file-label" for="system_logo">
+                                                        Seleccionar archivo de logo...
+                                                    </label>
+                                                </div>
+                                                <small class="form-text text-muted">
+                                                    Formatos permitidos: JPG, PNG, SVG. Tamaño recomendado: 200x60px
+                                                </small>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="logo-preview">
+                                                    <label class="d-block">Vista Previa:</label>
+                                                    <div class="current-logo-container p-2 border rounded text-center" 
+                                                         style="min-height: 80px; background-color: #f8f9fa;">
+                                                        <img id="current_logo" 
+                                                             src="" 
+                                                             alt="Logo actual" 
+                                                             class="img-fluid" 
+                                                             style="max-height: 60px; max-width: 100%; display: none;">
+                                                        <div class="no-logo text-muted" style="display: block;">
+                                                            <i class="fas fa-image fa-2x mb-2"></i>
+                                                            <br>Sin logo
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="mt-2">
+                                            <button type="button" class="btn btn-sm btn-danger" id="removeLogo" style="display: none;">
+                                                <i class="fas fa-trash"></i> Remover Logo
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div class="row">
@@ -781,13 +822,45 @@ function saveSettings(category, form) {
     const originalText = submitBtn.html();
     submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Guardando...').prop('disabled', true);
     
-    // Simulate AJAX call
-    setTimeout(() => {
-        submitBtn.html(originalText).prop('disabled', false);
-        
-        // Show success message
-        toastr.success(`Configuración de ${category} guardada exitosamente`);
-    }, 2000);
+    // For general settings, make real AJAX call
+    if (category === 'general') {
+        $.ajax({
+            url: '{{ route("admin.settings.update") }}',
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                submitBtn.html(originalText).prop('disabled', false);
+                toastr.success('Configuración guardada exitosamente');
+                
+                // Refresh page after successful save to show updated logo
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            },
+            error: function(xhr) {
+                submitBtn.html(originalText).prop('disabled', false);
+                if (xhr.status === 422) {
+                    const errors = xhr.responseJSON.errors;
+                    Object.keys(errors).forEach(key => {
+                        toastr.error(errors[key][0]);
+                    });
+                } else {
+                    toastr.error('Error al guardar la configuración');
+                }
+            }
+        });
+    } else {
+        // Simulate AJAX call for other categories
+        setTimeout(() => {
+            submitBtn.html(originalText).prop('disabled', false);
+            toastr.success(`Configuración de ${category} guardada exitosamente`);
+        }, 2000);
+    }
 }
 
 function saveIntegrations() {
@@ -831,23 +904,85 @@ function downloadBackup(backupId) {
     window.open(`/admin/backups/download/${backupId}`, '_blank');
 }
 
-// Initialize toastr
-toastr.options = {
-    "closeButton": true,
-    "debug": false,
-    "newestOnTop": true,
-    "progressBar": true,
-    "positionClass": "toast-top-right",
-    "preventDuplicates": false,
-    "onclick": null,
-    "showDuration": "300",
-    "hideDuration": "1000",
-    "timeOut": "3000",
-    "extendedTimeOut": "1000",
-    "showEasing": "swing",
-    "hideEasing": "linear",
-    "showMethod": "fadeIn",
-    "hideMethod": "fadeOut"
-};
+// Logo management functionality
+$(document).ready(function() {
+    // Check which logo file exists and load it
+    loadCurrentLogo();
+    
+    // Preview logo when file is selected
+    $('#system_logo').change(function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Update file label
+            $('.custom-file-label').text(file.name);
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                $('#current_logo').attr('src', e.target.result).show();
+                $('.no-logo').hide();
+                $('#removeLogo').show();
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Remove logo functionality
+    $('#removeLogo').click(function() {
+        if (confirm('¿Estás seguro de que quieres remover el logo actual?')) {
+            // Clear file input
+            $('#system_logo').val('');
+            $('.custom-file-label').text('Seleccionar archivo de logo...');
+            
+            // Hide current logo and show placeholder
+            $('#current_logo').hide();
+            $('.no-logo').show();
+            $(this).hide();
+            
+            toastr.info('Logo removido. Guarda los cambios para confirmar.');
+        }
+    });
+});
+
+function loadCurrentLogo() {
+    // Try to load logo in order of preference: JPG, PNG, SVG, GIF
+    const logoFormats = ['jpg', 'png', 'svg', 'jpeg', 'gif'];
+    
+    function tryLoadLogo(index) {
+        if (index >= logoFormats.length) {
+            // No logo found, show placeholder
+            $('#current_logo').hide();
+            $('.no-logo').show();
+            $('#removeLogo').hide();
+            return;
+        }
+        
+        const format = logoFormats[index];
+        const logoUrl = `${window.MuniAppConfig.imagesPath}/logo.${format}`;
+        const img = new Image();
+        
+        img.onload = function() {
+            // Logo found and loaded successfully
+            $('#current_logo').attr('src', logoUrl).show();
+            $('.no-logo').hide();
+            $('#removeLogo').show();
+        };
+        
+        img.onerror = function() {
+            // Try next format
+            tryLoadLogo(index + 1);
+        };
+        
+        img.src = logoUrl;
+    }
+    
+    tryLoadLogo(0);
+}
+
+// Initialize page
+$(document).ready(function() {
+    // Logo management is already initialized above
+    console.log('Settings page loaded');
+});
 </script>
 @endpush
