@@ -277,7 +277,9 @@
 
                     <div class="form-group">
                         <label for="map">Seleccione su ubicación en el mapa:</label>
-                        <div id="map" style="width: 100%; height: 400px;"></div>
+                        <div class="map-container">
+                            <div id="map" style="width: 100%; height: 400px; border-radius: 8px; border: 2px solid #e5e7eb; position: relative; z-index: 1;"></div>
+                        </div>
                         <small class="form-text text-muted">
                             <i class="fas fa-info-circle"></i> 
                             Arrastra el marcador o haz clic en el mapa para seleccionar la ubicación exacta
@@ -300,6 +302,82 @@
     /* Reset y base */
     .card-body {
         padding: 2rem;
+    }
+
+    /* Mapa específico */
+    .map-container {
+        margin: 15px 0;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    #map {
+        width: 100% !important;
+        height: 400px !important;
+        min-height: 400px !important;
+        border-radius: 8px;
+        border: 2px solid #e5e7eb;
+        position: relative;
+        z-index: 1;
+    }
+
+    .leaflet-container {
+        border-radius: 8px !important;
+        border: none !important;
+    }
+
+    .location-search-container {
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 10px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .location-search-input {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .location-search-input input {
+        flex: 1;
+        padding: 10px 15px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .location-search-input button {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .location-search-input button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .location-search-input button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .search-results {
+        margin-top: 10px;
+        font-size: 13px;
+        padding: 8px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.8);
     }
 
     /* Sección de formulario */
@@ -807,8 +885,7 @@
 @endsection
 
 @section('scripts')
-@if($tramite->include_map)
-<!-- Leaflet CSS y JS (OpenStreetMap - Gratuito) -->
+<!-- Leaflet CSS y JS (OpenStreetMap - Gratuito) - Siempre cargar para evitar problemas -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""/>
@@ -818,7 +895,6 @@
 
 <!-- Nuestro Leaflet Map Manager -->
 <script src="{{ asset('js/leaflet-map-manager.js') }}"></script>
-@endif
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -995,68 +1071,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Función para manejar la previsualización de archivos
-function handleFilePreview(input, fieldIndex, fieldType) {
-    console.log('handleFilePreview llamada:', fieldIndex, fieldType);
-    const previewContainer = document.getElementById('preview_' + fieldIndex);
-    if (!previewContainer) {
-        console.error('No se encontró el contenedor de preview:', 'preview_' + fieldIndex);
-        return;
-    }
-    
-    const files = input.files;
-    console.log('Archivos seleccionados:', files.length);
-    
-    // Limpiar preview anterior
-    previewContainer.innerHTML = '';
-    
-    if (files.length === 0) return;
-    
-    // Procesar cada archivo
-    for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        console.log('Procesando archivo:', file.name, file.type);
-        
-        if (fieldType === 'image' && file.type.startsWith('image/')) {
-            // Preview para imágenes
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imagePreview = document.createElement('div');
-                imagePreview.className = 'image-preview';
-                imagePreview.innerHTML = `
-                    <img src="${e.target.result}" alt="Preview de imagen" style="max-width: 200px; max-height: 150px; border-radius: 8px;">
-                    <button type="button" class="remove-file" onclick="removeFile(${fieldIndex})" title="Eliminar imagen">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
-                previewContainer.appendChild(imagePreview);
-            };
-            reader.readAsDataURL(file);
-        } else {
-            // Preview para archivos genéricos
-            const fileInfo = document.createElement('div');
-            fileInfo.className = 'file-info';
-            
-            const fileIcon = getFileIcon(file.type, file.name);
-            const fileSize = formatFileSize(file.size);
-            
-            fileInfo.innerHTML = `
-                <div class="file-icon">
-                    <i class="fas fa-${fileIcon}"></i>
-                </div>
-                <div class="file-details">
-                    <h6>${file.name}</h6>
-                    <small>${fileSize} • ${file.type || 'Archivo'}</small>
-                </div>
-                <button type="button" class="remove-file" onclick="removeFile(${fieldIndex})" title="Eliminar archivo">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            previewContainer.appendChild(fileInfo);
-        }
-    }
-}
-
 // Función para obtener el icono según el tipo de archivo
 function getFileIcon(mimeType, fileName) {
     const extension = fileName.split('.').pop().toLowerCase();
@@ -1105,78 +1119,6 @@ function removeFile(fieldIndex) {
         }, 3000);
     }
 }
-
-        // Inicializar mapa de Leaflet para selección de ubicación (solo si está presente)
-        if (document.getElementById('map')) {
-            console.log('Inicializando mapa de selección con Leaflet...');
-            
-            // Esperar a que LeafletMapManager esté disponible
-            const initMap = () => {
-                if (typeof window.LeafletMapManager !== 'undefined') {
-                    const mapData = window.LeafletMapManager.initSelectMap('map', {
-                        center: [-25.2637, -57.5759], // Paraguay
-                        zoom: 13,
-                        latInputId: 'latitud',
-                        lngInputId: 'longitud'
-                    });
-
-                    if (mapData) {
-                        console.log('Mapa de selección inicializado correctamente');
-
-                        // Búsqueda de ubicación
-                        const searchBtn = document.getElementById('search-btn');
-                        const searchInput = document.getElementById('ubicacion-search');
-                        const searchResults = document.getElementById('search-results');
-
-                        if (searchBtn && searchInput) {
-                            searchBtn.addEventListener('click', async function() {
-                                const query = searchInput.value.trim();
-                                if (!query) {
-                                    alert('Por favor ingrese una ubicación para buscar');
-                                    return;
-                                }
-
-                                searchBtn.disabled = true;
-                                searchBtn.textContent = 'Buscando...';
-                                searchResults.textContent = '';
-
-                                try {
-                                    const result = await window.LeafletMapManager.searchLocation(query, 'map');
-                                    searchResults.innerHTML = `<i class="fas fa-check text-success"></i> Ubicación encontrada: ${result.address}`;
-                                    searchResults.style.color = '#10b981';
-                                } catch (error) {
-                                    searchResults.innerHTML = `<i class="fas fa-exclamation-triangle text-warning"></i> No se encontró la ubicación. Intenta con términos más específicos.`;
-                                    searchResults.style.color = '#f59e0b';
-                                } finally {
-                                    searchBtn.disabled = false;
-                                    searchBtn.textContent = 'Buscar';
-                                }
-                            });
-
-                            // Buscar al presionar Enter
-                            searchInput.addEventListener('keypress', function(e) {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    searchBtn.click();
-                                }
-                            });
-                        }
-                    } else {
-                        console.error('Error inicializando el mapa de selección');
-                    }
-                } else {
-                    // Si LeafletMapManager no está disponible, esperar un poco más
-                    console.log('Esperando a que se cargue LeafletMapManager...');
-                    setTimeout(initMap, 100);
-                }
-            };
-
-            // Iniciar el proceso de inicialización
-            initMap();
-        } else {
-            console.log('No se encontró elemento de mapa, omitiendo inicialización');
-        }
-});
 </script>
 @endsection
 

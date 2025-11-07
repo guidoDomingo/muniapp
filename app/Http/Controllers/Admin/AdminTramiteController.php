@@ -113,6 +113,7 @@ class AdminTramiteController extends Controller
             'required_documents' => $request->required_documents ?? [],
             'workflow_steps' => $request->workflow_steps ? json_decode($request->workflow_steps, true) : null,
             'is_active' => $request->has('is_active'),
+            'include_map' => $request->has('include_map'),
         ]);
 
         return redirect()->route('admin.tramites.index')

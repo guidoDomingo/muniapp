@@ -127,6 +127,19 @@
                                                    {{ old('is_active', $tramite->is_active) ? 'checked' : '' }}>
                                             <label class="custom-control-label" for="is_active">Trámite Activo</label>
                                         </div>
+                                        <div class="custom-control custom-switch mt-2">
+                                            <input type="checkbox" 
+                                                   class="custom-control-input" 
+                                                   id="include_map" 
+                                                   name="include_map" 
+                                                   {{ old('include_map', $tramite->include_map) ? 'checked' : '' }}>
+                                            <label class="custom-control-label" for="include_map">
+                                                <i class="fas fa-map-marker-alt mr-1"></i>Incluir Mapa
+                                            </label>
+                                        </div>
+                                        <small class="form-text text-muted">
+                                            Al activar esta opción, el formulario incluirá un mapa interactivo para que los ciudadanos puedan seleccionar una ubicación específica
+                                        </small>
                                     </div>
                                 </div>
                             </div>
