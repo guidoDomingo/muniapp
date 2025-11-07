@@ -25,23 +25,23 @@
                 </p>
             </div>
             <div class="col-sm-4">
-                <div class="btn-group float-right" role="group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                <div class="dropdown float-right">
+                    <button type="button" class="btn btn-primary dropdown-toggle" id="actionsDropdown" onclick="toggleActionsDropdown()">
                         <i class="fas fa-cogs"></i> Acciones
                     </button>
-                    <div class="dropdown-menu dropdown-menu-right">
-                        <a class="dropdown-item" href="#" onclick="updateStatus('en_revision')">
-                            <i class="fas fa-eye text-info"></i> En Revisión
+                    <div class="dropdown-menu dropdown-menu-right" id="actionsDropdownMenu" style="display: none;">
+                        <a class="dropdown-item" href="#" onclick="updateStatus('en_revision'); hideDropdown();">
+                            <i class="fas fa-eye text-info mr-2"></i> En Revisión
                         </a>
-                        <a class="dropdown-item" href="#" onclick="updateStatus('en_proceso')">
-                            <i class="fas fa-cogs text-warning"></i> En Proceso
+                        <a class="dropdown-item" href="#" onclick="updateStatus('en_proceso'); hideDropdown();">
+                            <i class="fas fa-cogs text-warning mr-2"></i> En Proceso
                         </a>
-                        <a class="dropdown-item" href="#" onclick="updateStatus('completado')">
-                            <i class="fas fa-check text-success"></i> Completado
+                        <a class="dropdown-item" href="#" onclick="updateStatus('completado'); hideDropdown();">
+                            <i class="fas fa-check text-success mr-2"></i> Completado
                         </a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item text-danger" href="#" onclick="updateStatus('rechazado')">
-                            <i class="fas fa-times"></i> Rechazar
+                        <a class="dropdown-item text-danger" href="#" onclick="updateStatus('rechazado'); hideDropdown();">
+                            <i class="fas fa-times mr-2"></i> Rechazar
                         </a>
                     </div>
                 </div>
@@ -569,6 +569,95 @@
     }
 }
 
+/* Dropdown fixes y mejoras completas */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 1050;
+    min-width: 220px;
+    padding: 0.5rem 0;
+    margin: 0.125rem 0 0;
+    color: #212529;
+    text-align: left;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid rgba(0,0,0,.15);
+    border-radius: 0.375rem;
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,.175);
+    display: none;
+}
+
+.dropdown-menu.dropdown-menu-right {
+    right: 0;
+    left: auto;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 1rem;
+    clear: both;
+    font-weight: 400;
+    color: #212529;
+    text-align: inherit;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: transparent;
+    border: 0;
+    cursor: pointer;
+    transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    color: #16181b;
+    background-color: #f8f9fa;
+    text-decoration: none;
+}
+
+.dropdown-item:active {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.dropdown-divider {
+    height: 0;
+    margin: 0.5rem 0;
+    overflow: hidden;
+    border-top: 1px solid #dee2e6;
+}
+
+.dropdown-toggle::after {
+    display: inline-block;
+    margin-left: 0.255em;
+    vertical-align: 0.255em;
+    content: "";
+    border-top: 0.3em solid;
+    border-right: 0.3em solid transparent;
+    border-bottom: 0;
+    border-left: 0.3em solid transparent;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    color: #16181b;
+    background-color: #f8f9fa;
+    text-decoration: none;
+}
+
+.dropdown-divider {
+    height: 0;
+    margin: 0.5rem 0;
+    overflow: hidden;
+    border-top: 1px solid #dee2e6;
+}
+
 /* Alert mejorado */
 .alert {
     border-radius: 10px;
@@ -642,6 +731,46 @@ document.addEventListener('DOMContentLoaded', function() {
 // Variables globales
 let currentStatus = null;
 
+// Funciones del dropdown de acciones
+function toggleActionsDropdown() {
+    const dropdown = document.getElementById('actionsDropdownMenu');
+    const isVisible = dropdown.style.display === 'block';
+    
+    // Cerrar todos los dropdowns primero
+    hideAllDropdowns();
+    
+    // Toggle del dropdown actual
+    if (!isVisible) {
+        dropdown.style.display = 'block';
+        dropdown.style.position = 'absolute';
+        dropdown.style.top = '100%';
+        dropdown.style.right = '0';
+        dropdown.style.zIndex = '1050';
+    }
+}
+
+function hideDropdown() {
+    const dropdown = document.getElementById('actionsDropdownMenu');
+    dropdown.style.display = 'none';
+}
+
+function hideAllDropdowns() {
+    const dropdowns = document.querySelectorAll('.dropdown-menu');
+    dropdowns.forEach(dropdown => {
+        dropdown.style.display = 'none';
+    });
+}
+
+// Cerrar dropdown cuando se hace click fuera
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('actionsDropdown');
+    const dropdownMenu = document.getElementById('actionsDropdownMenu');
+    
+    if (!dropdown.contains(event.target) && !dropdownMenu.contains(event.target)) {
+        hideDropdown();
+    }
+});
+
 // Funciones de modal
 function showImageModal(src, title) {
     document.getElementById('modalImage').src = src;
@@ -651,6 +780,7 @@ function showImageModal(src, title) {
 
 function updateStatus(status) {
     currentStatus = status;
+    hideDropdown(); // Cerrar el dropdown primero
     $('#statusModal').modal('show');
 }
 
@@ -747,7 +877,7 @@ document.getElementById('confirmAssign')?.addEventListener('click', function() {
 function openChat() {
     const solicitudId = {{ $solicitud->id }};
     const url = `/admin/chat/solicitud?room=SOL-${solicitudId}&solicitud_id=${solicitudId}`;
-    window.open(url, '_blank', 'width=800,height=600');
+    window.location.href = url; // Cambio: abrir en la misma página
 }
 
 function generateReport() {
@@ -759,9 +889,14 @@ function showFullHistory() {
     alert('Funcionalidad de historial completo en desarrollo');
 }
 
-// Tooltips para elementos
-$(function () {
-    $('[data-toggle="tooltip"]').tooltip();
+// Tooltips y inicialización
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar tooltips si están disponibles
+    if (typeof $ !== 'undefined' && $.fn.tooltip) {
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+    
+    console.log('✅ Página de solicitud cargada correctamente');
 });
 </script>
 @endpush
