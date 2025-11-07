@@ -1,20 +1,50 @@
 @extends('layouts.admin')
 
-@section('title', 'Ver Solicitud - MuniApp Admin')
+@section('title', 'Solicitud #' . ($solicitud->tracking_code ?? $solicitud->id) . ' - MuniApp Admin')
 
 @section('content')
 <div class="content-header">
     <div class="container-fluid">
         <div class="row mb-2">
-            <div class="col-sm-6">
-                <h1 class="m-0">Solicitud #{{ $solicitud->tracking_code ?? $solicitud->id }}</h1>
+            <div class="col-sm-8">
+                <h1 class="m-0 d-flex align-items-center">
+                    <span class="badge badge-{{ $solicitud->status_color ?? 'secondary' }} badge-lg mr-3">
+                        {{ strtoupper(str_replace('_', ' ', $solicitud->estado)) }}
+                    </span>
+                    Solicitud #{{ $solicitud->tracking_code ?? $solicitud->id }}
+                </h1>
+                <p class="text-muted mb-0">
+                    <i class="fas fa-file-alt mr-1"></i>
+                    {{ $solicitud->tramite->nombre ?? 'Trámite' }}
+                    <span class="mx-2">•</span>
+                    <i class="fas fa-calendar mr-1"></i>
+                    {{ $solicitud->created_at->format('d/m/Y H:i') }}
+                    <span class="mx-2">•</span>
+                    <i class="fas fa-clock mr-1"></i>
+                    {{ $solicitud->created_at->diffForHumans() }}
+                </p>
             </div>
-            <div class="col-sm-6">
-                <ol class="breadcrumb float-sm-right">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Admin</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.solicitudes.index') }}">Solicitudes</a></li>
-                    <li class="breadcrumb-item active">Ver</li>
-                </ol>
+            <div class="col-sm-4">
+                <div class="btn-group float-right" role="group">
+                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                        <i class="fas fa-cogs"></i> Acciones
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                        <a class="dropdown-item" href="#" onclick="updateStatus('en_revision')">
+                            <i class="fas fa-eye text-info"></i> En Revisión
+                        </a>
+                        <a class="dropdown-item" href="#" onclick="updateStatus('en_proceso')">
+                            <i class="fas fa-cogs text-warning"></i> En Proceso
+                        </a>
+                        <a class="dropdown-item" href="#" onclick="updateStatus('completado')">
+                            <i class="fas fa-check text-success"></i> Completado
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item text-danger" href="#" onclick="updateStatus('rechazado')">
+                            <i class="fas fa-times"></i> Rechazar
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -23,494 +53,412 @@
 <section class="content">
     <div class="container-fluid">
         <div class="row">
-            <!-- Main Content -->
-            <div class="col-md-8">
-                <!-- Status and Actions -->
-                <div class="card card-outline card-primary">
+            <!-- Contenido Principal -->
+            <div class="col-lg-8">
+                
+                <!-- Información del Solicitante (Mejorada) -->
+                <div class="card card-primary card-outline">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-file-alt mr-1"></i>
-                            {{ $solicitud->tramite->nombre ?? 'Trámite' }}
-                        </h3>
-                        <div class="card-tools">
-                            <span class="badge badge-{{ $solicitud->status_color ?? 'secondary' }} badge-lg">
-                                {{ ucfirst(str_replace('_', ' ', $solicitud->estado)) }}
-                            </span>
-                            <div class="btn-group ml-2">
-                                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="fas fa-cogs"></i> Acciones
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end">
-                                    <a class="dropdown-item" href="{{ route('admin.solicitudes.edit', $solicitud->id) }}">
-                                        <i class="fas fa-edit"></i> Editar
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="#" onclick="updateStatus('en_revision')">
-                                        <i class="fas fa-eye"></i> Marcar en Revisión
-                                    </a>
-                                    <a class="dropdown-item" href="#" onclick="updateStatus('en_proceso')">
-                                        <i class="fas fa-cogs"></i> Marcar en Proceso
-                                    </a>
-                                    <a class="dropdown-item" href="#" onclick="updateStatus('completado')">
-                                        <i class="fas fa-check"></i> Marcar Completado
-                                    </a>
-                                    <a class="dropdown-item text-danger" href="#" onclick="updateStatus('rechazado')">
-                                        <i class="fas fa-times"></i> Rechazar
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item" href="#" onclick="openChat()">
-                                        <i class="fas fa-comments"></i> Abrir Chat
-                                    </a>
-                                    <a class="dropdown-item" href="#" onclick="generateReport()">
-                                        <i class="fas fa-file-pdf"></i> Generar Reporte
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="info-box">
-                                    <span class="info-box-icon bg-info">
-                                        <i class="fas fa-calendar"></i>
-                                    </span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Fecha de Solicitud</span>
-                                        <span class="info-box-number">{{ $solicitud->created_at->format('d/m/Y') }}</span>
-                                        <small>{{ $solicitud->created_at->format('H:i') }}</small>
-                                        <br>
-                                        <small class="text-muted">
-                                            <i class="fas fa-clock"></i> {{ $solicitud->created_at->diffForHumans() }}
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                @php
-                                    $priorityColors = [
-                                        'low' => 'secondary',
-                                        'medium' => 'primary',
-                                        'high' => 'warning',
-                                        'urgent' => 'danger'
-                                    ];
-                                @endphp
-                                <div class="info-box">
-                                    <span class="info-box-icon bg-{{ $priorityColors[$solicitud->priority ?? 'medium'] }}">
-                                        <i class="fas fa-exclamation"></i>
-                                    </span>
-                                    <div class="info-box-content">
-                                        <span class="info-box-text">Prioridad</span>
-                                        <span class="info-box-number">{{ ucfirst($solicitud->priority ?? 'medium') }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- User Information -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-user mr-1"></i>
+                            <i class="fas fa-user-circle mr-2"></i>
                             Información del Solicitante
                         </h3>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-3 text-center">
-                                <img src="{{ $solicitud->user->avatar_url ?? asset('images/default-avatar.png') }}" 
-                                     class="img-circle img-fluid" alt="Avatar" style="width: 100px; height: 100px;">
-                            </div>
-                            <div class="col-md-9">
-                                <dl class="row">
-                                    <dt class="col-sm-3">Nombre:</dt>
-                                    <dd class="col-sm-9">{{ $solicitud->nombre_completo ?? $solicitud->user->name }}</dd>
-                                    
-                                    <dt class="col-sm-3">Email:</dt>
-                                    <dd class="col-sm-9">{{ $solicitud->user->email }}</dd>
-                                    
-                                    <dt class="col-sm-3">Teléfono:</dt>
-                                    <dd class="col-sm-9">{{ $solicitud->telefono ?? 'No especificado' }}</dd>
-                                    
-                                    <dt class="col-sm-3">Dirección:</dt>
-                                    <dd class="col-sm-9">{{ $solicitud->direccion ?? 'No especificada' }}</dd>
-                                    
-                                    <dt class="col-sm-3">Usuario desde:</dt>
-                                    <dd class="col-sm-9">{{ $solicitud->user->created_at->format('d/m/Y') }}</dd>
-                                </dl>
+                        <div class="media">
+                            <img src="{{ $solicitud->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($solicitud->user->name ?? 'Usuario') . '&background=007bff&color=ffffff&size=128' }}" 
+                                 class="mr-3 rounded-circle" alt="Avatar" style="width: 64px; height: 64px;">
+                            <div class="media-body">
+                                <h5 class="mt-0 mb-1">{{ $solicitud->user->name ?? 'Usuario sin nombre' }}</h5>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p class="mb-1">
+                                            <i class="fas fa-envelope text-muted mr-2"></i>
+                                            <a href="mailto:{{ $solicitud->user->email }}">{{ $solicitud->user->email }}</a>
+                                        </p>
+                                        @if($solicitud->telefono)
+                                        <p class="mb-1">
+                                            <i class="fas fa-phone text-muted mr-2"></i>
+                                            {{ $solicitud->telefono }}
+                                        </p>
+                                        @endif
+                                    </div>
+                                    <div class="col-md-6">
+                                        @if($solicitud->direccion)
+                                        <p class="mb-1">
+                                            <i class="fas fa-map-marker-alt text-muted mr-2"></i>
+                                            {{ $solicitud->direccion }}
+                                        </p>
+                                        @endif
+                                        <p class="mb-0 text-muted">
+                                            <i class="fas fa-user-clock mr-2"></i>
+                                            Cliente desde {{ $solicitud->user->created_at->format('M Y') }}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Request Details -->
+                <!-- Detalles de la Solicitud (Simplificado) -->
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-file-text mr-1"></i>
+                            <i class="fas fa-file-text mr-2"></i>
                             Detalles de la Solicitud
                         </h3>
                     </div>
                     <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-12">
-                                <h5>Descripción:</h5>
-                                <div class="border p-3 bg-light rounded">
-                                    {{ $solicitud->detalles ?: 'No se proporcionó descripción' }}
-                                </div>
-                            </div>
+                        @if($solicitud->detalles)
+                        <div class="alert alert-light border-left-primary">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-comment-alt mr-2"></i>Descripción
+                            </h6>
+                            <p class="mb-0">{{ $solicitud->detalles }}</p>
                         </div>
-
-                        @if($solicitud->comentario)
-                            <div class="row mb-3">
-                                <div class="col-md-12">
-                                    <h5>Comentarios:</h5>
-                                    <div class="border p-3 bg-light rounded">
-                                        {{ $solicitud->comentario }}
-                                    </div>
-                                </div>
-                            </div>
                         @endif
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5>Información del Trámite:</h5>
-                                <ul class="list-unstyled">
-                                    <li><strong>Tipo:</strong> {{ $solicitud->tramite->nombre }}</li>
-                                    @if($solicitud->tramite->department)
-                                        <li><strong>Departamento:</strong> {{ $solicitud->tramite->department->name }}</li>
-                                    @endif
-                                    @if($solicitud->tramite->descripcion)
-                                        <li><strong>Descripción:</strong> {{ $solicitud->tramite->descripcion }}</li>
-                                    @endif
-                                    @if($solicitud->tramite->costo)
-                                        <li><strong>Costo:</strong> ${{ number_format($solicitud->tramite->costo, 2) }}</li>
-                                    @endif
-                                    @if($solicitud->tramite->tiempo_estimado)
-                                        <li><strong>Tiempo Estimado:</strong> {{ $solicitud->tramite->tiempo_estimado }} días</li>
-                                    @endif
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <h5>Asignación:</h5>
-                                @if($solicitud->assignedUser)
-                                    <div class="d-flex align-items-center mb-2">
-                                        <img src="{{ $solicitud->assignedUser->avatar_url }}" 
-                                             class="img-circle img-size-32 mr-2" alt="Avatar">
-                                        <div>
-                                            <strong>{{ $solicitud->assignedUser->name }}</strong><br>
-                                            <small class="text-muted">{{ $solicitud->assignedUser->email }}</small>
-                                        </div>
-                                    </div>
-                                    @if($solicitud->assignedUser->department)
-                                        <p><strong>Departamento:</strong> {{ $solicitud->assignedUser->department->name }}</p>
-                                    @endif
-                                @else
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        Esta solicitud no está asignada a ningún funcionario.
-                                        <br>
-                                        <button class="btn btn-sm btn-primary mt-2" onclick="showAssignModal()">
-                                            <i class="fas fa-user-plus"></i> Asignar Ahora
-                                        </button>
-                                    </div>
-                                @endif
-                            </div>
+                        
+                        @if($solicitud->comentario)
+                        <div class="alert alert-light border-left-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-sticky-note mr-2"></i>Comentarios Adicionales
+                            </h6>
+                            <p class="mb-0">{{ $solicitud->comentario }}</p>
                         </div>
+                        @endif
                     </div>
                 </div>
 
-                <!-- Datos del Formulario Dinámico -->
+                <!-- Datos del Formulario (Mejorado) -->
                 @php
                     $formData = json_decode($solicitud->formulario, true);
                     $campos = $formData['campos'] ?? [];
                 @endphp
                 @if(count($campos) > 0)
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-wpforms mr-1"></i>
-                                Datos Enviados por el Ciudadano
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                @foreach($campos as $index => $campo)
-                                    <div class="col-md-6 mb-3">
-                                        <div class="form-group">
-                                            <label class="font-weight-bold text-primary">
-                                                {{ $campo['nombre'] }}:
-                                            </label>
-                                            <div class="mt-2">
-                                                @switch($campo['tipo'])
-                                                    @case('file')
-                                                        @if($campo['valor'])
-                                                            <div class="file-preview border rounded p-3 bg-light">
-                                                                <div class="d-flex align-items-center">
-                                                                    <i class="fas fa-file-pdf fa-2x text-danger mr-3"></i>
-                                                                    <div class="flex-grow-1">
-                                                                        <strong>{{ basename($campo['valor']) }}</strong>
-                                                                        <br>
-                                                                        <small class="text-muted">Documento adjunto</small>
-                                                                    </div>
-                                                                    <a href="{{ url('storage/' . $campo['valor']) }}" 
-                                                                       class="btn btn-sm btn-outline-primary" 
-                                                                       target="_blank">
-                                                                        <i class="fas fa-download me-1"></i> Descargar
-                                                                    </a>
-                                                                </div>
-                                                            </div>
-                                                        @else
-                                                            <span class="text-muted">No se adjuntó archivo</span>
-                                                        @endif
-                                                        @break
-                                                        
-                                                    @case('image')
-                                                        @if($campo['valor'])
-                                                            <div class="image-preview">
-                                                                <img src="{{ url('storage/' . $campo['valor']) }}" 
-                                                                     class="img-thumbnail mb-2" 
-                                                                     style="max-width: 200px; max-height: 200px;"
-                                                                     alt="Imagen adjunta">
-                                                                <br>
-                                                                <a href="{{ url('storage/' . $campo['valor']) }}" 
-                                                                   class="btn btn-sm btn-outline-primary" 
-                                                                   target="_blank">
-                                                                    <i class="fas fa-eye me-1"></i> Ver tamaño completo
-                                                                </a>
-                                                            </div>
-                                                        @else
-                                                            <span class="text-muted">No se adjuntó imagen</span>
-                                                        @endif
-                                                        @break
-                                                        
-                                                    @case('textarea')
-                                                        <div class="border rounded p-3 bg-light">
-                                                            {!! nl2br(e($campo['valor'])) !!}
-                                                        </div>
-                                                        @break
-                                                        
-                                                    @default
-                                                        <div class="border rounded p-2 bg-light">
-                                                            <strong>{{ $campo['valor'] ?: 'No especificado' }}</strong>
-                                                        </div>
-                                                @endswitch
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Ubicación de la Solicitud -->
-                @if($solicitud->latitud && $solicitud->longitud)
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                Ubicación de la Solicitud
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <strong>Coordenadas:</strong><br>
-                                    <span class="text-muted">
-                                        Latitud: {{ $solicitud->latitud }}<br>
-                                        Longitud: {{ $solicitud->longitud }}
-                                    </span>
-                                </div>
-                                <div class="col-md-6">
-                                    <div id="location-address">
-                                        <strong>Dirección:</strong><br>
-                                        <span class="text-muted">Obteniendo dirección...</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="mapa" style="width: 100%; height: 400px; border-radius: 8px;"></div>
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            <!-- Sidebar -->
-            <div class="col-md-4">
-                <!-- Status Timeline -->
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-history mr-1"></i>
-                            Historial de Estados
-                        </h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="timeline">
-                            @php
-                                $historialUnico = $solicitud->history->unique('id')->sortBy('created_at');
-                            @endphp
-                            @forelse($historialUnico as $historial)
-                                <div class="time-label">
-                                    <span class="bg-{{ $historial->status_color ?? 'primary' }}">
-                                        {{ $historial->created_at->format('d/m/Y') }}
-                                    </span>
-                                </div>
-                                <div>
-                                    <i class="fas fa-{{ $historial->icon ?? 'circle' }} bg-{{ $historial->status_color ?? 'primary' }}"></i>
-                                    <div class="timeline-item">
-                                        <span class="time">
-                                            <i class="fas fa-clock"></i> {{ $historial->created_at->format('H:i') }}
-                                            <small class="text-muted ml-2">
-                                                ({{ $historial->created_at->diffForHumans() }})
-                                            </small>
-                                        </span>
-                                        <h3 class="timeline-header">
-                                            {{ ucfirst(str_replace('_', ' ', $historial->action ?? 'Estado actualizado')) }}
-                                        </h3>
-                                        @if($historial->description)
-                                            <div class="timeline-body">
-                                                {{ $historial->description }}
-                                            </div>
-                                        @endif
-                                        @if($historial->user)
-                                            <div class="timeline-footer">
-                                                <small class="text-muted">Por: {{ $historial->user->name }}</small>
-                                            </div>
-                                        @endif
-                                    </div>
-                                </div>
-                            @empty
-                                <div class="text-center text-muted">
-                                    <i class="fas fa-history fa-2x mb-3"></i>
-                                    <p>No hay historial disponible</p>
-                                </div>
-                            @endforelse
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">
-                            <i class="fas fa-chart-bar mr-1"></i>
-                            Estadísticas Rápidas
+                            <i class="fas fa-wpforms mr-2"></i>
+                            Información Proporcionada
                         </h3>
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            <div class="col-6">
-                                <div class="description-block">
-                                    <h5 class="description-header">{{ $solicitud->created_at->diffInDays(now()) }}</h5>
-                                    <span class="description-text">Días desde creación</span>
+                            @foreach($campos as $index => $campo)
+                            <div class="col-lg-6 mb-4">
+                                <div class="form-group">
+                                    <label class="text-primary font-weight-bold mb-2">
+                                        <i class="fas fa-tag mr-1"></i>
+                                        {{ $campo['nombre'] }}
+                                    </label>
+                                    
+                                    @switch($campo['tipo'])
+                                        @case('file')
+                                            @if($campo['valor'])
+                                            <div class="card border-0 bg-light">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="file-icon mr-3">
+                                                            <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h6 class="mb-1">{{ basename($campo['valor']) }}</h6>
+                                                            <small class="text-muted">Documento adjunto</small>
+                                                        </div>
+                                                        <a href="{{ url('storage/' . $campo['valor']) }}" 
+                                                           class="btn btn-sm btn-outline-primary" 
+                                                           target="_blank">
+                                                            <i class="fas fa-download"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            @else
+                                            <p class="text-muted mb-0">
+                                                <i class="fas fa-times-circle mr-1"></i>
+                                                No se adjuntó archivo
+                                            </p>
+                                            @endif
+                                            @break
+                                            
+                                        @case('image')
+                                            @if($campo['valor'])
+                                            <div class="text-center">
+                                                <img src="{{ url('storage/' . $campo['valor']) }}" 
+                                                     class="img-thumbnail shadow-sm" 
+                                                     style="max-width: 250px; max-height: 200px; cursor: pointer;"
+                                                     alt="Imagen adjunta"
+                                                     onclick="showImageModal('{{ url('storage/' . $campo['valor']) }}', '{{ $campo['nombre'] }}')">
+                                                <div class="mt-2">
+                                                    <small class="text-muted">Clic para ver en tamaño completo</small>
+                                                </div>
+                                            </div>
+                                            @else
+                                            <p class="text-muted mb-0">
+                                                <i class="fas fa-times-circle mr-1"></i>
+                                                No se adjuntó imagen
+                                            </p>
+                                            @endif
+                                            @break
+                                            
+                                        @case('textarea')
+                                        <div class="card border-0 bg-light">
+                                            <div class="card-body p-3">
+                                                {!! nl2br(e($campo['valor'])) !!}
+                                            </div>
+                                        </div>
+                                        @break
+                                        
+                                        @default
+                                        <div class="form-control-plaintext bg-light rounded p-2">
+                                            <strong>{{ $campo['valor'] ?: 'No especificado' }}</strong>
+                                        </div>
+                                    @endswitch
                                 </div>
                             </div>
-                            <div class="col-6">
-                                <div class="description-block">
-                                    <h5 class="description-header">{{ $solicitud->updated_at->diffInDays(now()) }}</h5>
-                                    <span class="description-text">Días sin actualizar</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-6">
-                                <div class="description-block">
-                                    <h5 class="description-header">{{ $solicitud->history->count() }}</h5>
-                                    <span class="description-text">Cambios de estado</span>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="description-block">
-                                    <h5 class="description-header">{{ count(json_decode($solicitud->formulario, true)['campos'] ?? []) }}</h5>
-                                    <span class="description-text">Campos del formulario</span>
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
+                @endif
 
-                <!-- Navigation -->
+                <!-- Ubicación (Mejorada) -->
+                @if($solicitud->latitud && $solicitud->longitud)
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">
-                            <i class="fas fa-navigation mr-1"></i>
-                            Navegación
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            Ubicación Reportada
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div id="location-address" class="text-muted">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>
+                                    Obteniendo dirección...
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-right">
+                                <button class="btn btn-sm btn-outline-primary" onclick="openInMaps()">
+                                    <i class="fas fa-external-link-alt mr-1"></i>
+                                    Abrir en Google Maps
+                                </button>
+                            </div>
+                        </div>
+                        <div id="mapa" style="width: 100%; height: 300px; border-radius: 8px; border: 2px solid #dee2e6;"></div>
+                    </div>
+                </div>
+                @endif
+            </div>
+
+            <!-- Barra Lateral -->
+            <div class="col-lg-4">
+                
+                <!-- Resumen Rápido -->
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Resumen
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-right">
+                                    <h4 class="text-primary">{{ $solicitud->created_at->diffInDays(now()) }}</h4>
+                                    <small class="text-muted">Días transcurridos</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <h4 class="text-{{ $solicitud->priority === 'high' || $solicitud->priority === 'urgent' ? 'danger' : 'info' }}">
+                                    {{ strtoupper($solicitud->priority ?? 'MEDIUM') }}
+                                </h4>
+                                <small class="text-muted">Prioridad</small>
+                            </div>
+                        </div>
+                        
+                        @if($solicitud->assignedUser)
+                        <hr>
+                        <div class="text-center">
+                            <h6 class="text-muted">Asignado a:</h6>
+                            <div class="d-flex align-items-center justify-content-center">
+                                <img src="{{ $solicitud->assignedUser->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($solicitud->assignedUser->name) . '&background=28a745&color=ffffff&size=64' }}" 
+                                     class="rounded-circle mr-2" style="width: 32px; height: 32px;">
+                                <span class="font-weight-bold">{{ $solicitud->assignedUser->name }}</span>
+                            </div>
+                        </div>
+                        @else
+                        <hr>
+                        <div class="text-center">
+                            <button class="btn btn-warning btn-sm" onclick="showAssignModal()">
+                                <i class="fas fa-user-plus mr-1"></i>
+                                Asignar Funcionario
+                            </button>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Acciones Rápidas -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-bolt mr-2"></i>
+                            Acciones Rápidas
                         </h3>
                     </div>
                     <div class="card-body">
                         <div class="d-grid gap-2">
-                            <a href="{{ route('admin.solicitudes.index') }}" class="btn btn-outline-secondary btn-block">
-                                <i class="fas fa-list"></i> Volver a la Lista
-                            </a>
-                            <a href="{{ route('admin.solicitudes.edit', $solicitud->id) }}" class="btn btn-outline-primary btn-block">
-                                <i class="fas fa-edit"></i> Editar Solicitud
-                            </a>
-                            <button type="button" class="btn btn-outline-success btn-block" onclick="openChat()">
-                                <i class="fas fa-comments"></i> Abrir Chat
+                            <button type="button" class="btn btn-outline-primary btn-block" onclick="openChat()">
+                                <i class="fas fa-comments mr-2"></i>
+                                Chatear con Ciudadano
                             </button>
                             <button type="button" class="btn btn-outline-info btn-block" onclick="generateReport()">
-                                <i class="fas fa-file-pdf"></i> Generar Reporte
+                                <i class="fas fa-file-pdf mr-2"></i>
+                                Generar Reporte
                             </button>
+                            <a href="{{ route('admin.solicitudes.edit', $solicitud->id) }}" class="btn btn-outline-secondary btn-block">
+                                <i class="fas fa-edit mr-2"></i>
+                                Editar Solicitud
+                            </a>
                         </div>
                     </div>
+                </div>
+
+                <!-- Historial Simplificado -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <i class="fas fa-history mr-2"></i>
+                            Historial Reciente
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $historialReciente = $solicitud->history->sortByDesc('created_at')->take(3);
+                        @endphp
+                        @forelse($historialReciente as $historial)
+                        <div class="d-flex mb-3">
+                            <div class="mr-3">
+                                <span class="badge badge-{{ $historial->status_color ?? 'primary' }} badge-circle">
+                                    <i class="fas fa-{{ $historial->icon ?? 'circle' }}"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ ucfirst(str_replace('_', ' ', $historial->action ?? 'Actualización')) }}</h6>
+                                <small class="text-muted">
+                                    {{ $historial->created_at->format('d/m/Y H:i') }}
+                                    @if($historial->user)
+                                    • {{ $historial->user->name }}
+                                    @endif
+                                </small>
+                                @if($historial->description)
+                                <p class="text-muted small mb-0 mt-1">{{ $historial->description }}</p>
+                                @endif
+                            </div>
+                        </div>
+                        @empty
+                        <div class="text-center text-muted">
+                            <i class="fas fa-history fa-2x mb-2"></i>
+                            <p class="mb-0">Sin historial</p>
+                        </div>
+                        @endforelse
+                        
+                        @if($solicitud->history->count() > 3)
+                        <div class="text-center mt-3">
+                            <a href="#" class="text-muted small" onclick="showFullHistory()">
+                                Ver historial completo ({{ $solicitud->history->count() }} registros)
+                            </a>
+                        </div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Navegación -->
+                <div class="text-center">
+                    <a href="{{ route('admin.solicitudes.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Volver a la Lista
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Status Update Modal -->
-<div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<!-- Modal para ver imagen en tamaño completo -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="statusModalLabel">Actualizar Estado</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="imageModalLabel">Vista de Imagen</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-            <div class="modal-body">
-                <div class="form-group mb-3">
-                    <label for="status_comments">Comentarios</label>
-                    <textarea class="form-control" id="status_comments" rows="3" 
-                              placeholder="Comentarios sobre el cambio de estado..."></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-primary" id="confirmStatusUpdate">Actualizar</button>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" class="img-fluid" alt="Imagen">
             </div>
         </div>
     </div>
 </div>
 
-<!-- Assign Modal -->
-<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+<!-- Modal para cambio de estado -->
+<div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="assignModalLabel">Asignar Solicitud</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title" id="statusModalLabel">Actualizar Estado</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
             <div class="modal-body">
-                <div class="form-group mb-3">
-                    <label for="assign_user">Asignar a</label>
+                <div class="form-group">
+                    <label for="status_comments">Comentarios del cambio</label>
+                    <textarea class="form-control" id="status_comments" rows="3" 
+                              placeholder="Describe el motivo del cambio de estado..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmStatusUpdate">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para asignación -->
+<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assignModalLabel">Asignar Funcionario</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="assign_user">Funcionario</label>
                     <select class="form-control" id="assign_user">
-                        <option value="">Seleccionar usuario...</option>
+                        <option value="">Seleccionar funcionario...</option>
                         @foreach($users ?? [] as $user)
                             <option value="{{ $user->id }}">{{ $user->name }} - {{ $user->email }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group mb-3">
-                    <label for="assign_comments">Comentarios</label>
+                <div class="form-group">
+                    <label for="assign_comments">Instrucciones</label>
                     <textarea class="form-control" id="assign_comments" rows="3" 
-                              placeholder="Comentarios sobre la asignación..."></textarea>
+                              placeholder="Instrucciones para el funcionario asignado..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="confirmAssign">Asignar</button>
             </div>
         </div>
@@ -523,27 +471,116 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
       integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
       crossorigin=""/>
+      
 <style>
-.file-preview {
+/* Mejoras estéticas generales */
+.badge-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.border-left-primary {
+    border-left: 4px solid #007bff !important;
+}
+
+.border-left-info {
+    border-left: 4px solid #17a2b8 !important;
+}
+
+/* Efectos hover para cards */
+.card {
     transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.125);
 }
 
-.file-preview:hover {
-    transform: translateY(-2px);
+.card:hover {
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
 }
 
-.image-preview img {
+/* Mejoras para archivos adjuntos */
+.file-icon {
     transition: transform 0.2s ease;
 }
 
-.image-preview img:hover {
-    transform: scale(1.05);
+.file-icon:hover {
+    transform: scale(1.1);
 }
 
+/* Estilo para imágenes */
+.img-thumbnail {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.img-thumbnail:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Mapa mejorado */
 .leaflet-container {
-    border: 2px solid #dee2e6;
     border-radius: 8px !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Badge personalizado */
+.badge-lg {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+}
+
+/* Efectos para botones */
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Estilo para el historial */
+.timeline-item {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid #007bff;
+    transition: all 0.3s ease;
+}
+
+.timeline-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .card:hover {
+        transform: none;
+    }
+    
+    .img-thumbnail:hover {
+        transform: none;
+    }
+}
+
+/* Alert mejorado */
+.alert {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Media object mejorado */
+.media {
+    padding: 1rem;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
 }
 </style>
 @endpush
@@ -560,43 +597,40 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     @if($solicitud->latitud && $solicitud->longitud)
-        // Inicializar mapa de visualización si hay coordenadas
-        console.log('Inicializando mapa de visualización...');
-        
+        // Inicializar mapa de visualización
         const initDisplayMap = () => {
             if (window.LeafletMapManager) {
                 const lat = {{ $solicitud->latitud }};
                 const lng = {{ $solicitud->longitud }};
                 
                 const map = window.LeafletMapManager.initDisplayMap('mapa', lat, lng, {
-                    zoom: 15
+                    zoom: 16
                 });
                 
                 if (map) {
-                    console.log('Mapa de visualización inicializado correctamente');
+                    console.log('✅ Mapa de visualización inicializado correctamente');
                     
-                    // Obtener dirección usando geocodificación inversa
+                    // Obtener dirección
                     fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`)
                         .then(response => response.json())
                         .then(data => {
                             if (data && data.display_name) {
                                 document.getElementById('location-address').innerHTML = 
-                                    `<strong>Dirección:</strong><br><span class="text-muted">${data.display_name}</span>`;
+                                    `<i class="fas fa-map-marker-alt text-primary mr-2"></i>${data.display_name}`;
                             } else {
                                 document.getElementById('location-address').innerHTML = 
-                                    `<strong>Ubicación:</strong><br><span class="text-muted">Lat: ${lat}, Lng: ${lng}</span>`;
+                                    `<i class="fas fa-map-marker-alt text-primary mr-2"></i>Lat: ${lat}, Lng: ${lng}`;
                             }
                         })
                         .catch(error => {
                             console.error('Error obteniendo dirección:', error);
                             document.getElementById('location-address').innerHTML = 
-                                `<strong>Ubicación:</strong><br><span class="text-muted">Lat: ${lat}, Lng: ${lng}</span>`;
+                                `<i class="fas fa-map-marker-alt text-primary mr-2"></i>Lat: ${lat}, Lng: ${lng}`;
                         });
                 } else {
-                    console.error('Error inicializando el mapa de visualización');
+                    console.error('❌ Error inicializando el mapa');
                 }
             } else {
-                console.log('Esperando a que se cargue LeafletMapManager...');
                 setTimeout(initDisplayMap, 100);
             }
         };
@@ -605,23 +639,38 @@ document.addEventListener('DOMContentLoaded', function() {
     @endif
 });
 
-// Funciones para gestión de solicitudes
-// Funciones para gestión de solicitudes
+// Variables globales
 let currentStatus = null;
+
+// Funciones de modal
+function showImageModal(src, title) {
+    document.getElementById('modalImage').src = src;
+    document.getElementById('imageModalLabel').textContent = title;
+    $('#imageModal').modal('show');
+}
 
 function updateStatus(status) {
     currentStatus = status;
-    const statusModal = new bootstrap.Modal(document.getElementById('statusModal'));
-    statusModal.show();
+    $('#statusModal').modal('show');
 }
 
 function showAssignModal() {
-    const assignModal = new bootstrap.Modal(document.getElementById('assignModal'));
-    assignModal.show();
+    $('#assignModal').modal('show');
 }
 
-document.getElementById('confirmStatusUpdate').addEventListener('click', function() {
+function openInMaps() {
+    const lat = {{ $solicitud->latitud ?? 0 }};
+    const lng = {{ $solicitud->longitud ?? 0 }};
+    window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+}
+
+// Event listeners
+document.getElementById('confirmStatusUpdate')?.addEventListener('click', function() {
     const comments = document.getElementById('status_comments').value;
+    
+    // Mostrar loading
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Actualizando...';
+    this.disabled = true;
     
     fetch(`/admin/solicitudes/{{ $solicitud->id }}/status`, {
         method: 'PATCH',
@@ -636,29 +685,34 @@ document.getElementById('confirmStatusUpdate').addEventListener('click', functio
     })
     .then(response => response.json())
     .then(data => {
-        const statusModal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
-        statusModal.hide();
-        
         if (data.success) {
-            location.reload();
+            window.location.reload();
         } else {
-            alert('Error: ' + data.message);
+            alert('Error: ' + (data.message || 'Error desconocido'));
+            this.innerHTML = 'Confirmar';
+            this.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         alert('Error al actualizar el estado');
+        this.innerHTML = 'Confirmar';
+        this.disabled = false;
     });
 });
 
-document.getElementById('confirmAssign').addEventListener('click', function() {
+document.getElementById('confirmAssign')?.addEventListener('click', function() {
     const userId = document.getElementById('assign_user').value;
     const comments = document.getElementById('assign_comments').value;
     
     if (!userId) {
-        alert('Selecciona un usuario');
+        alert('Por favor selecciona un funcionario');
         return;
     }
+    
+    // Mostrar loading
+    this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Asignando...';
+    this.disabled = true;
     
     fetch(`/admin/solicitudes/{{ $solicitud->id }}/assign`, {
         method: 'PATCH',
@@ -673,28 +727,41 @@ document.getElementById('confirmAssign').addEventListener('click', function() {
     })
     .then(response => response.json())
     .then(data => {
-        const assignModal = bootstrap.Modal.getInstance(document.getElementById('assignModal'));
-        assignModal.hide();
-        
         if (data.success) {
-            location.reload();
+            window.location.reload();
         } else {
-            alert('Error: ' + data.message);
+            alert('Error: ' + (data.message || 'Error desconocido'));
+            this.innerHTML = 'Asignar';
+            this.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         alert('Error al asignar la solicitud');
+        this.innerHTML = 'Asignar';
+        this.disabled = false;
     });
 });
 
+// Funciones auxiliares
 function openChat() {
     const solicitudId = {{ $solicitud->id }};
-    window.open(`/admin/chat/solicitud?room=SOL-${solicitudId}&solicitud_id=${solicitudId}`, '_blank');
+    const url = `/admin/chat/solicitud?room=SOL-${solicitudId}&solicitud_id=${solicitudId}`;
+    window.open(url, '_blank', 'width=800,height=600');
 }
 
 function generateReport() {
     window.open(`/admin/solicitudes/{{ $solicitud->id }}/report`, '_blank');
 }
+
+function showFullHistory() {
+    // Implementar modal o página para historial completo
+    alert('Funcionalidad de historial completo en desarrollo');
+}
+
+// Tooltips para elementos
+$(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+});
 </script>
 @endpush
