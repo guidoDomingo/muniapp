@@ -18,6 +18,7 @@ class Tramite extends Model
         'estimated_days',
         'cost',
         'is_active',
+        'include_map',
         'workflow_steps',
     ];
 
@@ -26,6 +27,7 @@ class Tramite extends Model
         'required_documents' => 'array',
         'workflow_steps' => 'array',
         'is_active' => 'boolean',
+        'include_map' => 'boolean',
         'cost' => 'decimal:2',
     ];
 

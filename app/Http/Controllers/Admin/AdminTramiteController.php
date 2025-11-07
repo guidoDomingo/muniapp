@@ -57,7 +57,7 @@ class AdminTramiteController extends Controller
             'estimated_days' => 'nullable|integer|min:1',
             'cost' => 'nullable|numeric|min:0',
             'form_fields' => 'nullable|json',
-            'required_documents' => 'nullable|array',
+            'include_map' => 'nullable|boolean',
             'workflow_steps' => 'nullable|json',
         ]);
 
@@ -68,7 +68,8 @@ class AdminTramiteController extends Controller
             'estimated_days' => $request->estimated_days,
             'cost' => $request->cost ?? 0,
             'form_fields' => $request->form_fields ? json_decode($request->form_fields, true) : null,
-            'required_documents' => $request->required_documents ?? [],
+            'include_map' => $request->has('include_map'),
+            'required_documents' => [], // Ya no se usan documentos requeridos
             'workflow_steps' => $request->workflow_steps ? json_decode($request->workflow_steps, true) : null,
             'is_active' => $request->has('is_active'),
         ]);

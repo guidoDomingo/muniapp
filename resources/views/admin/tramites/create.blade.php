@@ -2,6 +2,10 @@
 
 @section('title', 'Crear Trámite - MuniApp Admin')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/admin-tramites.css') }}">
+@endpush
+
 @section('content')
 <div class="content-header">
     <div class="container-fluid">
@@ -104,37 +108,9 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Documentos Requeridos -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <i class="fas fa-file-alt mr-1"></i>
-                                Documentos Requeridos
-                            </h3>
-                        </div>
-                        <div class="card-body">
-                            <div id="documents-container">
-                                <div class="document-item mb-2">
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" name="required_documents[]" 
-                                               placeholder="Nombre del documento requerido">
-                                        <div class="input-group-append">
-                                            <button class="btn btn-outline-danger remove-document" type="button">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="add-document">
-                                <i class="fas fa-plus"></i> Agregar Documento
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
-                <!-- Configuración Adicional -->
+                <!-- Configuración y Campos del Formulario -->
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
@@ -151,6 +127,13 @@
                                 </label>
                             </div>
 
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="include_map" name="include_map" value="1">
+                                <label class="form-check-label" for="include_map">
+                                    Incluir mapa de ubicación
+                                </label>
+                            </div>
+
                             <div class="form-group">
                                 <label>Estado</label>
                                 <div class="text-sm">
@@ -161,7 +144,12 @@
                         </div>
                     </div>
 
-                    <!-- Campos del Formulario -->
+                </div>
+            </div>
+
+            <!-- Campos del Formulario - Ancho completo -->
+            <div class="row mt-4">
+                <div class="col-12">
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">
@@ -171,55 +159,32 @@
                         </div>
                         <div class="card-body">
                             <div id="form-fields-container">
-                                <div class="form-field-item mb-3 p-3 border rounded">
-                                    <div class="form-group">
-                                        <label>Nombre del Campo</label>
-                                        <input type="text" class="form-control form-field-name" 
-                                               placeholder="ej: direccion">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Etiqueta</label>
-                                        <input type="text" class="form-control form-field-label" 
-                                               placeholder="ej: Dirección">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Tipo</label>
-                                        <select class="form-control form-field-type">
-                                            <option value="text">Texto</option>
-                                            <option value="textarea">Área de texto</option>
-                                            <option value="number">Número</option>
-                                            <option value="email">Email</option>
-                                            <option value="date">Fecha</option>
-                                            <option value="select">Lista desplegable</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input form-field-required">
-                                        <label class="form-check-label">Campo requerido</label>
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-field mt-2">
-                                        <i class="fas fa-trash"></i> Eliminar Campo
-                                    </button>
-                                </div>
+                                <!-- Los campos se agregan dinámicamente aquí -->
                             </div>
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="add-form-field">
+                            <button type="button" class="btn btn-outline-primary" id="add-form-field">
                                 <i class="fas fa-plus"></i> Agregar Campo
                             </button>
                             <input type="hidden" name="form_fields" id="form_fields_json">
+                            <input type="hidden" name="include_map" id="include_map_hidden">
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Acciones -->
+            <!-- Acciones -->
+            <div class="row mt-4">
+                <div class="col-12">
                     <div class="card">
-                        <div class="card-body">
-                            <button type="submit" class="btn btn-primary btn-block">
+                        <div class="card-body text-center">
+                            <button type="submit" class="btn btn-primary btn-lg mr-3">
                                 <i class="fas fa-save"></i> Crear Trámite
                             </button>
-                            <a href="{{ route('admin.tramites.index') }}" class="btn btn-secondary btn-block">
+                            <a href="{{ route('admin.tramites.index') }}" class="btn btn-secondary btn-lg">
                                 <i class="fas fa-times"></i> Cancelar
                             </a>
                         </div>
                     </div>
+
                 </div>
             </div>
         </form>
@@ -230,74 +195,142 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
-    // Add document
-    $('#add-document').click(function() {
-        const documentItem = `
-            <div class="document-item mb-2">
-                <div class="input-group">
-                    <input type="text" class="form-control" name="required_documents[]" 
-                           placeholder="Nombre del documento requerido">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-danger remove-document" type="button">
-                            <i class="fas fa-trash"></i>
+    // Función para crear un nuevo campo del formulario
+    function createFormField() {
+        const fieldId = Date.now();
+        return `
+            <div class="form-field-item mb-4 p-4 border rounded" data-field-id="${fieldId}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Nombre del Campo</label>
+                            <input type="text" class="form-control form-field-name" 
+                                   placeholder="ej: direccion">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Etiqueta</label>
+                            <input type="text" class="form-control form-field-label" 
+                                   placeholder="ej: Dirección">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Tipo</label>
+                            <select class="form-control form-field-type">
+                                <option value="text">Texto</option>
+                                <option value="textarea">Área de texto</option>
+                                <option value="number">Número</option>
+                                <option value="email">Email</option>
+                                <option value="date">Fecha</option>
+                                <option value="select">Lista desplegable</option>
+                                <option value="radio">Botones de radio</option>
+                                <option value="checkbox">Casillas de verificación</option>
+                                <option value="file">Archivo/Documento</option>
+                                <option value="image">Imagen</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Opciones para select, radio y checkbox -->
+                <div class="options-container" style="display: none;">
+                    <div class="form-group">
+                        <label>Opciones (una por línea)</label>
+                        <textarea class="form-control form-field-options" rows="3" 
+                                  placeholder="Opción 1&#10;Opción 2&#10;Opción 3"></textarea>
+                        <small class="form-text text-muted">Escriba cada opción en una línea separada</small>
+                    </div>
+                </div>
+                
+                <!-- Configuración de archivos -->
+                <div class="file-config" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tipos de archivo permitidos</label>
+                                <select class="form-control form-field-file-types" multiple>
+                                    <option value="pdf">PDF</option>
+                                    <option value="doc,docx">Word</option>
+                                    <option value="jpg,jpeg,png">Imágenes</option>
+                                    <option value="txt">Texto</option>
+                                    <option value="xls,xlsx">Excel</option>
+                                </select>
+                                <small class="form-text text-muted">Mantén Ctrl presionado para seleccionar múltiples</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label>Tamaño máximo (MB)</label>
+                                <input type="number" class="form-control form-field-max-size" 
+                                       value="10" min="1" max="50">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input form-field-required">
+                            <label class="form-check-label">Campo requerido</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <button type="button" class="btn btn-outline-danger remove-field">
+                            <i class="fas fa-trash"></i> Eliminar Campo
                         </button>
                     </div>
                 </div>
             </div>
         `;
-        $('#documents-container').append(documentItem);
-    });
+    }
 
-    // Remove document
-    $(document).on('click', '.remove-document', function() {
-        $(this).closest('.document-item').remove();
-    });
-
-    // Add form field
+    // Agregar nuevo campo del formulario
     $('#add-form-field').click(function() {
-        const fieldItem = `
-            <div class="form-field-item mb-3 p-3 border rounded">
-                <div class="form-group">
-                    <label>Nombre del Campo</label>
-                    <input type="text" class="form-control form-field-name" 
-                           placeholder="ej: direccion">
-                </div>
-                <div class="form-group">
-                    <label>Etiqueta</label>
-                    <input type="text" class="form-control form-field-label" 
-                           placeholder="ej: Dirección">
-                </div>
-                <div class="form-group">
-                    <label>Tipo</label>
-                    <select class="form-control form-field-type">
-                        <option value="text">Texto</option>
-                        <option value="textarea">Área de texto</option>
-                        <option value="number">Número</option>
-                        <option value="email">Email</option>
-                        <option value="date">Fecha</option>
-                        <option value="select">Lista desplegable</option>
-                    </select>
-                </div>
-                <div class="form-check">
-                    <input type="checkbox" class="form-check-input form-field-required">
-                    <label class="form-check-label">Campo requerido</label>
-                </div>
-                <button type="button" class="btn btn-sm btn-outline-danger remove-field mt-2">
-                    <i class="fas fa-trash"></i> Eliminar Campo
-                </button>
-            </div>
-        `;
-        $('#form-fields-container').append(fieldItem);
+        $('#form-fields-container').append(createFormField());
     });
 
-    // Remove form field
+    // Remover campo del formulario
     $(document).on('click', '.remove-field', function() {
         $(this).closest('.form-field-item').remove();
     });
 
-    // Collect form fields data before submit
+    // Manejar cambio de tipo de campo
+    $(document).on('change', '.form-field-type', function() {
+        const type = $(this).val();
+        const fieldItem = $(this).closest('.form-field-item');
+        const optionsContainer = fieldItem.find('.options-container');
+        const fileConfig = fieldItem.find('.file-config');
+        
+        // Mostrar/ocultar contenedores según el tipo
+        if (type === 'select' || type === 'radio' || type === 'checkbox') {
+            optionsContainer.show();
+            fileConfig.hide();
+        } else if (type === 'file' || type === 'image') {
+            optionsContainer.hide();
+            fileConfig.show();
+            
+            // Configurar tipos de archivo por defecto
+            if (type === 'image') {
+                fileConfig.find('.form-field-file-types').val(['jpg,jpeg,png']);
+            }
+        } else {
+            optionsContainer.hide();
+            fileConfig.hide();
+        }
+    });
+
+    // Sincronizar checkbox de mapa con campo oculto
+    $('#include_map').change(function() {
+        $('#include_map_hidden').val($(this).is(':checked') ? '1' : '0');
+    });
+
+    // Recopilar datos de campos del formulario antes de enviar
     $('form').submit(function() {
         const formFields = [];
+        
         $('.form-field-item').each(function() {
             const name = $(this).find('.form-field-name').val();
             const label = $(this).find('.form-field-label').val();
@@ -305,16 +338,44 @@ $(document).ready(function() {
             const required = $(this).find('.form-field-required').is(':checked');
             
             if (name && label) {
-                formFields.push({
+                const field = {
                     name: name,
                     label: label,
                     type: type,
                     required: required
-                });
+                };
+
+                // Agregar opciones para select, radio, checkbox
+                if (type === 'select' || type === 'radio' || type === 'checkbox') {
+                    const optionsText = $(this).find('.form-field-options').val();
+                    if (optionsText) {
+                        field.options = optionsText.split('\n').filter(option => option.trim().length > 0);
+                    }
+                }
+
+                // Agregar configuración de archivos
+                if (type === 'file' || type === 'image') {
+                    const fileTypes = $(this).find('.form-field-file-types').val();
+                    const maxSize = $(this).find('.form-field-max-size').val();
+                    
+                    field.file_types = fileTypes ? fileTypes.join(',') : '';
+                    field.max_size = maxSize || 10;
+                }
+
+                formFields.push(field);
             }
         });
+        
         $('#form_fields_json').val(JSON.stringify(formFields));
+        
+        // Asegurar que el valor del mapa esté sincronizado
+        $('#include_map_hidden').val($('#include_map').is(':checked') ? '1' : '0');
     });
+
+    // Inicializar con un campo por defecto
+    if ($('#form-fields-container').children().length === 0) {
+        $('#form-fields-container').append(createFormField());
+    }
 });
 </script>
 @endpush
