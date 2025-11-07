@@ -52,9 +52,21 @@ class AdminChatController extends Controller
         return view('admin.chat.index', compact('chats', 'rooms', 'users', 'stats'));
     }
 
-    public function chat()
+    public function chat(Request $request)
     {
-        // Vista para chat en tiempo real del admin
+        // Si viene con parámetros específicos de solicitud, redirigir directamente
+        if ($request->filled('room') && $request->filled('type') && $request->filled('solicitud_id')) {
+            $solicitudId = $request->solicitud_id;
+            $room = $request->room;
+            $type = $request->type;
+            
+            // Obtener información de la solicitud para el contexto
+            $solicitud = \App\Models\Solicitud::with(['user', 'tramite'])->find($solicitudId);
+            
+            return view('admin.chat.solicitud', compact('solicitud', 'room', 'type'));
+        }
+        
+        // Vista para chat en tiempo real del admin (comportamiento original)
         $rooms = Chat::select('room', 'chat_type')
             ->selectRaw('COUNT(*) as message_count')
             ->selectRaw('MAX(created_at) as last_message')

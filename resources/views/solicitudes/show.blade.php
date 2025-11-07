@@ -48,7 +48,19 @@
                             <h6 class="card-title">Información del Trámite</h6>
                             <p class="mb-1"><strong>Tiempo estimado:</strong> {{ $solicitud->tramite->tiempo_estimado ?? 'No especificado' }}</p>
                             <p class="mb-1"><strong>Costo:</strong> {{ $solicitud->tramite->costo ?? 'Gratuito' }}</p>
-                            <p class="mb-0"><strong>Estado actual:</strong> {{ ucfirst($solicitud->estado) }}</p>
+                            <p class="mb-3"><strong>Estado actual:</strong> {{ ucfirst($solicitud->estado) }}</p>
+                            
+                            <!-- Botón de Chat -->
+                            <a href="/chat?type=solicitud&room={{ $solicitud->tracking_code ?: 'SOL-' . $solicitud->id }}" 
+                               class="btn btn-primary btn-sm w-100 mb-2" target="_blank">
+                                <i class="fas fa-comments me-2"></i>Chat con Soporte
+                            </a>
+                            
+                            <!-- Código de seguimiento -->
+                            <div class="mt-2 p-2 bg-white rounded">
+                                <small class="text-muted">Código de seguimiento:</small><br>
+                                <strong class="text-primary">{{ $solicitud->tracking_code ?: 'SOL-' . $solicitud->id }}</strong>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -362,6 +362,7 @@
 <script>
     // Variables globales
     let currentRoom = null;
+    let currentRoomType = 'public'; // Agregar esta variable
     let currentUser = @json(auth()->user());
     let eventSource = null;
     let lastMessageId = 0;
@@ -370,6 +371,25 @@
         setupEventListeners();
         console.log('Admin Chat initialized - Debug Mode');
         console.log('Current user:', currentUser);
+        
+        // Detectar parámetros de URL para autoseleccionar sala
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRoom = urlParams.get('room');
+        const urlType = urlParams.get('type');
+        const urlSolicitudId = urlParams.get('solicitud_id');
+        
+        if (urlRoom && urlType === 'solicitud') {
+            console.log('Auto-selecting room from URL:', urlRoom);
+            currentRoomType = urlType; // Establecer el tipo correcto
+            // Buscar y hacer clic en la sala correspondiente
+            const roomElement = document.querySelector(`[data-room="${urlRoom}"]`);
+            if (roomElement) {
+                roomElement.click();
+            } else {
+                // Si no existe la sala en la lista, seleccionarla manualmente
+                selectRoom(urlRoom, `Solicitud ${urlRoom}`, 'solicitud');
+            }
+        }
     });
     
     function setupEventListeners() {
@@ -431,6 +451,7 @@
         
         // Actualizar UI
         currentRoom = roomName;
+        currentRoomType = roomType; // Agregar esta línea
         
         // Actualizar título
         const chatTitle = document.getElementById('chatTitle');
@@ -480,9 +501,8 @@
     }
     
     function startSSE(roomName) {
-        console.log('Starting SSE for room:', roomName);
-        const chatType = 'public';
-        const url = `/chat/${roomName}/stream?type=${chatType}&lastId=${lastMessageId}`;
+        console.log('Starting SSE for room:', roomName, 'type:', currentRoomType);
+        const url = `/chat/${roomName}/stream?type=${currentRoomType}&lastId=${lastMessageId}`;
         
         console.log('SSE URL:', url);
         
@@ -549,13 +569,13 @@
     }
     
     function loadMessages(roomName, silent = false) {
-        console.log('Loading messages for room:', roomName);
+        console.log('Loading messages for room:', roomName, 'type:', currentRoomType);
         
         if (!silent) {
             showLoadingInChat();
         }
         
-        const url = `/chat/${roomName}/messages`;
+        const url = `/chat/${roomName}/messages?type=${currentRoomType}`;
         console.log('Messages URL:', url);
         
         fetch(url)
@@ -698,7 +718,7 @@
             body: JSON.stringify({
                 message: message,
                 room: currentRoom,
-                chat_type: 'public'
+                chat_type: currentRoomType
             })
         })
         .then(response => {

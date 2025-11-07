@@ -27,7 +27,8 @@
                         @forelse($availableRooms ?? [] as $room)
                         <a href="#" class="list-group-item list-group-item-action room-item" 
                            data-room="{{ $room['name'] ?? 'general' }}"
-                           data-display="{{ $room['display_name'] ?? 'General' }}">
+                           data-display="{{ $room['display_name'] ?? 'General' }}"
+                           data-type="{{ $room['type'] ?? 'public' }}">
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1">{{ $room['display_name'] ?? 'General' }}</h6>
                                 @if(isset($room['unread_count']) && $room['unread_count'] > 0)
@@ -221,6 +222,12 @@
     let currentUser = @json(auth()->user());
     let eventSource = null;
     let lastMessageId = 0;
+    let currentChatType = 'public'; // Por defecto público
+    
+    // Obtener parámetros de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlRoom = urlParams.get('room');
+    const urlType = urlParams.get('type');
     
     document.addEventListener('DOMContentLoaded', function() {
         // Inicializar Feather Icons
@@ -229,7 +236,36 @@
         // Event listeners
         setupEventListeners();
         
+        // Si hay parámetros de URL, usar esa sala automáticamente
+        if (urlRoom && urlType) {
+            console.log('URL parameters detected:', {room: urlRoom, type: urlType});
+            currentChatType = urlType;
+            
+            // Si es una solicitud específica, forzar la selección de esa sala
+            if (urlType === 'solicitud') {
+                console.log('Solicitud specific room detected, auto-selecting:', urlRoom);
+                // Simular la selección de sala directamente
+                currentRoom = urlRoom;
+                
+                // Ocultar la selección de salas y mostrar directamente el chat
+                const roomSelection = document.querySelector('.room-item');
+                if (roomSelection) {
+                    // Actualizar el título del chat
+                    updateChatTitle(`Solicitud ${urlRoom}`);
+                    // Cargar mensajes inmediatamente
+                    loadMessages(urlRoom);
+                    // Iniciar SSE
+                    startSSE(urlRoom);
+                }
+            } else {
+                selectRoom(urlRoom, urlRoom);
+            }
+        } else {
+            console.log('No URL parameters, using default room selection');
+        }
+        
         console.log('Chat initialized with SSE (Server-Sent Events) - Real Time Mode');
+        console.log('Chat type:', currentChatType, 'Room:', urlRoom || 'none');
     });
     
     function setupEventListeners() {
@@ -239,6 +275,9 @@
                 e.preventDefault();
                 const roomName = this.dataset.room;
                 const displayName = this.dataset.display;
+                const roomType = this.dataset.type;
+                console.log('Room clicked:', roomName, 'type:', roomType);
+                currentChatType = roomType; // Actualizar el tipo de chat
                 selectRoom(roomName, displayName);
             });
         });
@@ -268,6 +307,14 @@
             newChatBtn.addEventListener('click', function() {
                 alert('Funcionalidad de nueva consulta próximamente disponible');
             });
+        }
+    }
+    
+    function updateChatTitle(title) {
+        const chatTitleElement = document.querySelector('h1.page-title');
+        if (chatTitleElement) {
+            chatTitleElement.innerHTML = `<i data-feather="message-circle" class="me-2"></i>${title}`;
+            feather.replace();
         }
     }
     
@@ -304,13 +351,14 @@
     }
     
     function startSSE(roomName) {
-        const chatType = 'public'; // Por ahora usar público
-        const url = `/chat/${roomName}/stream?type=${chatType}&lastId=${lastMessageId}`;
+        console.log('Starting SSE for room:', roomName, 'type:', currentChatType);
+        const url = `/chat/${roomName}/stream?type=${currentChatType}&lastId=${lastMessageId}`;
+        console.log('SSE URL:', url);
         
         eventSource = new EventSource(url);
         
         eventSource.onopen = function(event) {
-            console.log('SSE Connected to room:', roomName);
+            console.log('SSE Connected to room:', roomName, 'type:', currentChatType);
             updateConnectionStatus('connected');
         };
         
@@ -322,12 +370,15 @@
         
         eventSource.addEventListener('new-message', function(event) {
             const message = JSON.parse(event.data);
-            console.log('New message received:', message);
+            console.log('New message received by user:', message);
             
             // Solo agregar el mensaje si no es del usuario actual (evitar duplicados)
             if (message.user_id != currentUser.id) {
+                console.log('Adding message from other user:', message);
                 addMessageToChat(message);
                 lastMessageId = Math.max(lastMessageId, message.id);
+            } else {
+                console.log('Ignoring own message to prevent duplication');
             }
         });
         
@@ -374,7 +425,7 @@
             showLoadingInChat();
         }
         
-        fetch(`/chat/${roomName}/messages`)
+        fetch(`/chat/${roomName}/messages?type=${currentChatType}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -481,6 +532,12 @@
         addMessageToChat(tempMessage);
         
         // Enviar mensaje al servidor
+        console.log('Enviando mensaje:', {
+            message: message,
+            room: currentRoom,
+            chat_type: currentChatType
+        });
+        
         fetch('/chat', {
             method: 'POST',
             headers: {
@@ -490,16 +547,22 @@
             body: JSON.stringify({
                 message: message,
                 room: currentRoom,
-                chat_type: 'public'
+                chat_type: currentChatType
             })
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            return response.json();
+        })
         .then(data => {
+            console.log('Response data:', data);
             if (data.success) {
                 input.value = '';
                 lastMessageId = Math.max(lastMessageId, data.chat.id);
             } else {
-                alert('Error al enviar el mensaje');
+                console.error('Server returned error:', data);
+                alert('Error al enviar el mensaje: ' + (data.message || 'Error desconocido'));
                 // Remover mensaje temporal si falló
                 const tempElements = document.querySelectorAll(`[data-temp-id="${tempMessage.id}"]`);
                 tempElements.forEach(el => el.remove());
@@ -507,7 +570,7 @@
         })
         .catch(error => {
             console.error('Error sending message:', error);
-            alert('Error al enviar el mensaje');
+            alert('Error al enviar el mensaje: ' + error.message);
             // Remover mensaje temporal si falló
             const tempElements = document.querySelectorAll(`[data-temp-id="${tempMessage.id}"]`);
             tempElements.forEach(el => el.remove());

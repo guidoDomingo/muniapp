@@ -690,7 +690,7 @@ document.getElementById('confirmAssign').addEventListener('click', function() {
 
 function openChat() {
     const solicitudId = {{ $solicitud->id }};
-    window.open(`/chat?type=solicitud&room=SOL-${solicitudId}`, '_blank');
+    window.open(`/admin/chat/solicitud?room=SOL-${solicitudId}&solicitud_id=${solicitudId}`, '_blank');
 }
 
 function generateReport() {

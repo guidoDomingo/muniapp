@@ -41,6 +41,7 @@
                                         <label for="status">Estado</label>
                                         <select name="status" id="status" class="form-control">
                                             <option value="">Todos</option>
+                                            <option value="pendiente" {{ request('status') == 'pendiente' ? 'selected' : '' }}>Pendiente</option>
                                             <option value="recibido" {{ request('status') == 'recibido' ? 'selected' : '' }}>Recibido</option>
                                             <option value="en_revision" {{ request('status') == 'en_revision' ? 'selected' : '' }}>En Revisión</option>
                                             <option value="en_proceso" {{ request('status') == 'en_proceso' ? 'selected' : '' }}>En Proceso</option>
@@ -359,24 +360,22 @@
 </section>
 
 <!-- Status Update Modal -->
-<div class="modal fade" id="statusModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Actualizar Estado</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <h5 class="modal-title" id="statusModalLabel">Actualizar Estado</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="status_comments">Comentarios</label>
                     <textarea class="form-control" id="status_comments" rows="3" 
                               placeholder="Comentarios sobre el cambio de estado..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="confirmStatusUpdate">Actualizar</button>
             </div>
         </div>
@@ -384,17 +383,15 @@
 </div>
 
 <!-- Assign Modal -->
-<div class="modal fade" id="assignModal" tabindex="-1" role="dialog">
+<div class="modal fade" id="assignModal" tabindex="-1" aria-labelledby="assignModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Asignar Solicitudes</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
-                </button>
+                <h5 class="modal-title" id="assignModalLabel">Asignar Solicitudes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="assign_user">Asignar a</label>
                     <select class="form-control" id="assign_user">
                         <option value="">Seleccionar usuario...</option>
@@ -403,14 +400,14 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group mb-3">
                     <label for="assign_comments">Comentarios</label>
                     <textarea class="form-control" id="assign_comments" rows="3" 
                               placeholder="Comentarios sobre la asignación..."></textarea>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="confirmAssign">Asignar</button>
             </div>
         </div>
@@ -459,9 +456,6 @@ $('#confirmStatusUpdate').click(function() {
             console.error('Error updating status:', xhr.responseText);
             toastr.error('Error al actualizar el estado: ' + error);
         }
-        error: function() {
-            alert('Error al actualizar el estado');
-        }
     });
 });
 
@@ -483,20 +477,60 @@ function assignSelected() {
 $('#confirmAssign').click(function() {
     const userId = $('#assign_user').val();
     const comments = $('#assign_comments').val();
+    const selectedSolicitudes = [];
+    $('.solicitud-checkbox:checked').each(function() {
+        selectedSolicitudes.push($(this).val());
+    });
     
     if (!userId) {
         alert('Selecciona un usuario');
         return;
     }
     
-    // Aquí harías las peticiones AJAX para asignar cada solicitud
-    // Por simplicidad, recargaremos la página
-    location.reload();
+    if (selectedSolicitudes.length === 0) {
+        alert('Selecciona al menos una solicitud');
+        return;
+    }
+    
+    // Asignar múltiples solicitudes
+    let completedAssignments = 0;
+    const totalAssignments = selectedSolicitudes.length;
+    
+    selectedSolicitudes.forEach(function(solicitudId) {
+        $.ajax({
+            url: `/admin/solicitudes/${solicitudId}/assign`,
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            data: {
+                _token: '{{ csrf_token() }}',
+                user_id: userId,
+                comments: comments
+            },
+            success: function(response) {
+                completedAssignments++;
+                if (completedAssignments === totalAssignments) {
+                    $('#assignModal').modal('hide');
+                    toastr.success('Solicitudes asignadas exitosamente');
+                    location.reload();
+                }
+            },
+            error: function() {
+                completedAssignments++;
+                if (completedAssignments === totalAssignments) {
+                    $('#assignModal').modal('hide');
+                    toastr.error('Error al asignar algunas solicitudes');
+                    location.reload();
+                }
+            }
+        });
+    });
 });
 
 function openChat(solicitudId) {
-    // Abrir ventana de chat para la solicitud
-    window.open(`/chat?type=solicitud&room=SOL-${solicitudId}`, '_blank');
+    // Abrir ventana de chat para la solicitud en el admin
+    window.open(`/admin/chat/solicitud?room=SOL-${solicitudId}&solicitud_id=${solicitudId}`, '_blank');
 }
 
 // Select all functionality

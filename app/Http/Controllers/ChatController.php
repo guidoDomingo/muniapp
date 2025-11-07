@@ -51,16 +51,38 @@ class ChatController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            // Log para depuración de autenticación
+            Log::info('Chat store attempt', [
+                'user_id' => auth()->id(),
+                'user_authenticated' => auth()->check(),
+                'request_data' => $request->only(['message', 'room', 'chat_type'])
+            ]);
+            
+            // Verificar autenticación
+            if (!auth()->check()) {
+                Log::error('User not authenticated in chat store');
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Usuario no autenticado'
+                ], 401);
+            }
+            
             $request->validate([
                 'message' => 'required_without:attachment|string|max:1000',
                 'room' => 'required|string|max:100',
-                'chat_type' => 'required|string|in:public,private,solicitud,commission',
+                'chat_type' => 'required|string|in:public,private,solicitud,support,group',
                 'parent_id' => 'nullable|exists:chats,id',
                 'attachment' => 'nullable|file|max:10240', // 10MB max
             ]);
 
             $roomName = $request->room;
             $chatType = $request->chat_type;
+            
+            Log::info('Chat validation passed', [
+                'room' => $roomName,
+                'chat_type' => $chatType,
+                'user_id' => auth()->id()
+            ]);
             
             // Verificar permisos
             $this->authorizeRoom($roomName, $chatType);
@@ -92,6 +114,15 @@ class ChatController extends Controller
             ]);
 
             $chat->load('user');
+            
+            // Log para depuración
+            Log::info('Chat message created', [
+                'user_id' => auth()->id(),
+                'room' => $roomName,
+                'chat_type' => $chatType,
+                'message' => $request->message,
+                'chat_id' => $chat->id
+            ]);
 
             // Enviar evento en tiempo real
             broadcast(new NewChatMessage($chat))->toOthers();
@@ -105,12 +136,30 @@ class ChatController extends Controller
                 'chat' => $chat,
             ]);
             
-        } catch (\Exception $e) {
-            Log::error('Error sending chat message: ' . $e->getMessage());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Chat validation error', [
+                'errors' => $e->errors(),
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
             
             return response()->json([
                 'success' => false,
-                'message' => 'Error al enviar el mensaje'
+                'message' => 'Datos de validación incorrectos',
+                'errors' => $e->errors()
+            ], 422);
+            
+        } catch (\Exception $e) {
+            Log::error('Error sending chat message', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al enviar el mensaje: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -276,6 +325,30 @@ class ChatController extends Controller
             'type' => 'group',
             'unread_count' => 0,
         ];
+
+        // Agregar salas de solicitudes específicas del usuario
+        $solicitudes = Solicitud::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        foreach ($solicitudes as $solicitud) {
+            $roomName = $solicitud->tracking_code ?: 'SOL-' . $solicitud->id;
+            
+            // Contar mensajes en esta sala
+            $messageCount = Chat::where('room', $roomName)
+                ->where('chat_type', 'solicitud')
+                ->count();
+            
+            if ($messageCount > 0) {
+                $rooms[] = [
+                    'name' => $roomName,
+                    'display_name' => "Mi Solicitud: {$solicitud->tramite->nombre}",
+                    'type' => 'solicitud',
+                    'unread_count' => 0,
+                    'solicitud_id' => $solicitud->id,
+                ];
+            }
+        }
 
         return $rooms;
     }

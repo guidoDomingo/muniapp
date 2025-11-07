@@ -110,6 +110,7 @@ Route::middleware('auth')->group(function () {
     // Rutas del chat en tiempo real
     Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('chat', [ChatController::class, 'store'])->name('chat.store');
+    Route::post('chat/send', [ChatController::class, 'store'])->name('chat.send');
     Route::get('chat/{room}/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
     
     // Rutas SSE para tiempo real
@@ -143,6 +144,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Chat Management
     Route::get('chat', [AdminChatController::class, 'index'])->name('chat.index');
     Route::get('chat/live', [AdminChatController::class, 'chat'])->name('chat.live');
+    Route::get('chat/solicitud', [AdminChatController::class, 'chat'])->name('chat.solicitud');
     Route::get('chat/rooms', [AdminChatController::class, 'rooms'])->name('chat.rooms');
     Route::post('chat/moderate', [AdminChatController::class, 'moderate'])->name('chat.moderate');
     
