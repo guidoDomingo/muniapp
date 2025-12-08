@@ -66,10 +66,17 @@ class AdminChatController extends Controller
             return view('admin.chat.solicitud', compact('solicitud', 'room', 'type'));
         }
         
-        // Vista para chat en tiempo real del admin (comportamiento original)
+        // Vista para chat en tiempo real del admin (soporte-general y solicitudes-tramites grupo)
         $rooms = Chat::select('room', 'chat_type')
             ->selectRaw('COUNT(*) as message_count')
             ->selectRaw('MAX(created_at) as last_message')
+            ->where(function($query) {
+                $query->where(function($q) {
+                    $q->where('room', 'soporte-general')->where('chat_type', 'support');
+                })->orWhere(function($q) {
+                    $q->where('room', 'solicitudes-tramites')->where('chat_type', 'group');
+                });
+            })
             ->groupBy('room', 'chat_type')
             ->orderBy('last_message', 'desc')
             ->get()

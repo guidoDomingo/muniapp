@@ -32,7 +32,7 @@
                             Categorías
                         </h3>
                     </div>
-                    <div class="card-body p-0">
+                    <!-- <div class="card-body p-0">
                         <ul class="nav nav-pills flex-column">
                             <li class="nav-item">
                                 <a href="#general" class="nav-link active" data-toggle="pill">
@@ -70,7 +70,7 @@
                                 </a>
                             </li>
                         </ul>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 

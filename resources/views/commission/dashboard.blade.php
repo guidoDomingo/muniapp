@@ -8,7 +8,7 @@
                 <div>
                     <h1 class="page-title">
                         <i class="fas fa-users-cog me-2"></i>
-                        Dashboard Comisión Municipal
+                        Panel Comisión Municipal
                     </h1>
                     <p class="page-subtitle">Panel de gestión para miembros de la comisión</p>
                 </div>

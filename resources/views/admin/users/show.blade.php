@@ -50,7 +50,7 @@
                             </li>
                             @if($user->dni)
                             <li class="list-group-item">
-                                <b>DNI</b> <span class="float-right">{{ $user->dni }}</span>
+                                <b>Cedula</b> <span class="float-right">{{ $user->dni }}</span>
                             </li>
                             @endif
                             @if($user->phone)

@@ -38,8 +38,8 @@
                     </div>
                     <div class="card-body">
                         <div class="text-center mb-3">
-                            <img src="{{ $solicitud->user->avatar_url ?? asset('images/default-avatar.png') }}" 
-                                 class="img-circle img-size-64" alt="Avatar">
+                            <!-- <img src="{{ $solicitud->user->avatar_url ?? asset('images/default-avatar.png') }}" 
+                                 class="img-circle img-size-64" alt="Avatar"> -->
                             <h5 class="mt-2">{{ $solicitud->user->name }}</h5>
                             <p class="text-muted">{{ $solicitud->user->email }}</p>
                         </div>

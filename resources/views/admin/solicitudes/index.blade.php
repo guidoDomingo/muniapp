@@ -122,8 +122,8 @@
                                     <th>Trámite</th>
                                     <th>Datos del Formulario</th>
                                     <th>Estado</th>
-                                    <th>Prioridad</th>
-                                    <th>Asignado a</th>
+                                    <!-- <th>Prioridad</th> -->
+                                    <!-- <th>Asignado a</th> -->
                                     <th>Fecha</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -139,8 +139,8 @@
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <img src="{{ $solicitud->user->avatar_url ?? asset('images/default-avatar.png') }}" 
-                                                 class="img-circle img-size-32 mr-2" alt="Avatar">
+                                            <!-- <img src="{{ $solicitud->user->avatar_url ?? asset('images/default-avatar.png') }}" 
+                                                 class="img-circle img-size-32 mr-2" alt="Avatar"> -->
                                             <div>
                                                 <strong>{{ $solicitud->user->name }}</strong>
                                                 <br>
@@ -217,7 +217,7 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td>
+                                    <!-- <td>
                                         @php
                                             $priorityColors = [
                                                 'low' => 'secondary',
@@ -229,8 +229,8 @@
                                         <span class="badge badge-{{ $priorityColors[$solicitud->priority ?? 'medium'] }}">
                                             {{ ucfirst($solicitud->priority ?? 'medium') }}
                                         </span>
-                                    </td>
-                                    <td>
+                                    </td> -->
+                                    <!-- <td>
                                         @if($solicitud->assignedUser)
                                             <div class="d-flex align-items-center">
                                                 <img src="{{ $solicitud->assignedUser->avatar_url }}" 
@@ -240,7 +240,7 @@
                                         @else
                                             <span class="text-muted">Sin asignar</span>
                                         @endif
-                                    </td>
+                                    </td> -->
                                     <td>
                                         {{ $solicitud->created_at->format('d/m/Y') }}
                                         <br>
@@ -252,10 +252,10 @@
                                                class="btn btn-sm btn-outline-info" title="Ver">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            <a href="{{ route('admin.solicitudes.edit', $solicitud) }}" 
+                                            <!-- <a href="{{ route('admin.solicitudes.edit', $solicitud) }}" 
                                                class="btn btn-sm btn-outline-primary" title="Editar">
                                                 <i class="fas fa-edit"></i>
-                                            </a>
+                                            </a> -->
                                             <button type="button" class="btn btn-sm btn-outline-success" 
                                                     onclick="openChat({{ $solicitud->id }})" title="Chat">
                                                 <i class="fas fa-comments"></i>

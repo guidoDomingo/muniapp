@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminTramiteController;
 use App\Http\Controllers\Admin\AdminSolicitudController;
 use App\Http\Controllers\Admin\AdminChatController;
+use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminDepartmentController;
 
 // Route to serve images
@@ -73,8 +74,8 @@ Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
 // Iniciar sesión
 Route::post('login', [AuthController::class, 'login']);
 
-// Cerrar sesión
-Route::get('logout', [AuthController::class, 'logout'])->name('logout');
+// Cerrar sesión - soporta tanto GET como POST para evitar errores
+Route::match(['GET', 'POST'], 'logout', [AuthController::class, 'logout'])->name('logout');
 
 
 Route::get('/', [TramiteController::class, 'index'])->middleware(['auth']);
@@ -122,7 +123,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/analytics', [AdminDashboardController::class, 'analytics'])->name('analytics');
-    Route::get('/reports', [AdminDashboardController::class, 'reports'])->name('reports');
+    Route::get('/reports', [AdminReportController::class, 'index'])->name('reports');
+    Route::get('/reports/data', [AdminReportController::class, 'getData'])->name('reports.data');
     
     // Users Management
     Route::resource('users', AdminUserController::class);

@@ -99,7 +99,7 @@
                         <table class="table table-hover text-nowrap">
                             <thead>
                                 <tr>
-                                    <th>Avatar</th>
+                                    <!-- <th>Avatar</th> -->
                                     <th>Nombre</th>
                                     <th>Email</th>
                                     <th>Rol</th>
@@ -112,14 +112,14 @@
                             <tbody>
                                 @forelse($users as $user)
                                 <tr>
-                                    <td>
+                                    <!-- <td>
                                         <img src="{{ $user->avatar_url }}" alt="Avatar" 
                                              class="img-circle img-size-32">
-                                    </td>
+                                    </td> -->
                                     <td>
                                         <strong>{{ $user->name }}</strong>
                                         @if($user->dni)
-                                            <br><small class="text-muted">DNI: {{ $user->dni }}</small>
+                                            <br><small class="text-muted">Cedula: {{ $user->dni }}</small>
                                         @endif
                                     </td>
                                     <td>{{ $user->email }}</td>

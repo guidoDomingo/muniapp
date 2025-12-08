@@ -161,57 +161,60 @@
                     </a>
                 </li>
                 <li class="nav-item d-none d-sm-inline-block">
-                    <a href="{{ route('admin.dashboard') }}" class="nav-link">Dashboard</a>
+                    <a href="{{ route('admin.dashboard') }}" class="nav-link">Panel de Control</a>
                 </li>
             </ul>
 
             <!-- Right navbar links -->
-            <ul class="navbar-nav ml-auto">
+            <ul class="navbar-nav ms-auto">
                 <!-- Notifications Dropdown Menu -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link" data-toggle="dropdown" href="#">
+                    <!-- <a class="nav-link" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
                         <i class="far fa-bell"></i>
-                        <span class="badge badge-warning navbar-badge">3</span>
+                        <span class="badge bg-warning">3</span>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        <span class="dropdown-item dropdown-header">3 Notificaciones</span>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-file mr-2"></i> Nueva solicitud
-                            <span class="float-right text-muted text-sm">hace 2 min</span>
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item dropdown-footer">Ver todas las notificaciones</a>
-                    </div>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+                        <span class="dropdown-item-text dropdown-header">3 Notificaciones</span>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a href="#" class="dropdown-item">
+                            <i class="fas fa-file me-2"></i> Nueva solicitud
+                            <span class="float-end text-muted small">hace 2 min</span>
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a href="#" class="dropdown-item dropdown-footer">Ver todas las notificaciones</a></li>
+                    </ul> -->
                 </li>
                 
                 <!-- User Dropdown Menu -->
                 <li class="nav-item dropdown">
-                    <a class="nav-link" data-toggle="dropdown" href="#">
-                        <img src="{{ auth()->user()->avatar_url }}" alt="User Image" class="img-circle" style="width: 30px; height: 30px;">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
+                        <!-- <img src="{{ auth()->user()->avatar_url }}" alt="User Image" class="rounded-circle" style="width: 30px; height: 30px;"> -->
+                        <i class="fas fa-user me-2"></i>
                         <span class="d-none d-md-inline">{{ auth()->user()->name }}</span>
                     </a>
-                    <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                        <div class="dropdown-header">
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+                        <li class="dropdown-header">
                             <strong>{{ auth()->user()->name }}</strong>
                             <br>
                             <small class="text-muted">{{ auth()->user()->email }}</small>
-                        </div>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-user mr-2"></i> Perfil
-                        </a>
-                        <a href="#" class="dropdown-item">
-                            <i class="fas fa-cogs mr-2"></i> Configuración
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="dropdown-item">
-                                <i class="fas fa-sign-out-alt mr-2"></i> Cerrar Sesión
-                            </button>
-                        </form>
-                    </div>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a href="#" class="dropdown-item">
+                            <i class="fas fa-user me-2"></i> Perfil
+                        </a></li>
+                        <li><a href="#" class="dropdown-item">
+                            <i class="fas fa-cogs me-2"></i> Configuración
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}" class="mb-0">
+                                @csrf
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
                 </li>
             </ul>
         </nav>
@@ -233,7 +236,7 @@
                         <li class="nav-item">
                             <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-tachometer-alt"></i>
-                                <p>Dashboard</p>
+                                <p>Panel de Control</p>
                             </a>
                         </li>
                         

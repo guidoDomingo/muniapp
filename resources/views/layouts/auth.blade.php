@@ -140,7 +140,7 @@
 </head>
 
 <body>
-    <div class="auth-container">
+    <!-- <div class="auth-container">
         <div class="auth-card">
             <div class="logo-container">
                 <img id="system_logo" 
@@ -159,7 +159,7 @@
                 Desarrollado con <i class="fas fa-heart" style="color: #e74c3c;"></i> por el equipo de desarrollo
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -172,6 +172,11 @@
             const logoImg = document.getElementById('system_logo');
             const logoFallback = document.querySelector('.logo-fallback');
             
+            // Solo ejecutar si los elementos existen
+            if (!logoImg || !logoFallback) {
+                return;
+            }
+            
             // Intentar cargar diferentes formatos de logo
             const logoFormats = ['png', 'jpg', 'jpeg', 'svg'];
             let logoLoaded = false;
@@ -180,10 +185,12 @@
                 if (!logoLoaded) {
                     const testImg = new Image();
                     testImg.onload = function() {
-                        if (!logoLoaded) {
+                        if (!logoLoaded && logoImg) {
                             logoImg.src = `{{ asset('images/logo.${format}') }}?t=${new Date().getTime()}`;
                             logoImg.style.display = 'block';
-                            logoFallback.style.display = 'none';
+                            if (logoFallback) {
+                                logoFallback.style.display = 'none';
+                            }
                             logoLoaded = true;
                         }
                     };

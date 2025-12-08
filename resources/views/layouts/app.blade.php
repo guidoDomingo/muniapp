@@ -44,7 +44,14 @@
                                 {{ Auth::user()->name }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ route('logout') }}">Cerrar sesión</a></li>
+                                <li>
+                                    <form method="POST" action="{{ route('logout') }}" class="mb-0">
+                                        @csrf
+                                        <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">
+                                            Cerrar sesión
+                                        </button>
+                                    </form>
+                                </li>
                             </ul>
                         </li>
                     @else

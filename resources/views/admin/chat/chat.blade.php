@@ -98,10 +98,10 @@
                     
                     <div class="card-body p-0">
                         <!-- Placeholder inicial -->
-                        <div id="chatPlaceholder" class="d-flex flex-column justify-content-center align-items-center text-muted" style="height: 400px;">
+                        <div id="chatPlaceholder" class="d-flex flex-column justify-content-center align-items-center text-muted" style="height: 100px;">
                             <i class="fas fa-comments fa-4x mb-3 text-muted"></i>
                             <h5>Selecciona una conversación para comenzar</h5>
-                            <p class="text-center">Elige una conversación del panel izquierdo para ver los mensajes y responder a los ciudadanos.</p>
+                            <!-- <p class="text-center">Elige una conversación del panel izquierdo para ver los mensajes y responder a los ciudadanos.</p> -->
                         </div>
                         
                         <!-- Área de mensajes -->

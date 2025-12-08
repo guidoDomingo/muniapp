@@ -97,7 +97,7 @@
                                 </div>
                             </div>
 
-                            <div class="form-group">
+                            {{-- <div class="form-group">
                                 <label for="cost">Costo ($)</label>
                                 <input type="number" class="form-control @error('cost') is-invalid @enderror" 
                                        id="cost" name="cost" value="{{ old('cost', 0) }}" min="0" step="0.01">
@@ -105,7 +105,7 @@
                                     <span class="invalid-feedback">{{ $message }}</span>
                                 @enderror
                                 <small class="form-text text-muted">Dejar en 0 para trámites gratuitos</small>
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                 </div>

@@ -325,7 +325,7 @@
                 <div class="nav-item">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                         <i data-feather="activity" class="nav-icon"></i>
-                        <span class="nav-text">Dashboard Admin</span>
+                        <span class="nav-text">Panel de Control</span>
                     </a>
                 </div>
 
@@ -402,10 +402,13 @@
                 </div>
 
                 <div class="nav-item">
-                    <a href="{{ route('logout') }}" class="nav-link">
-                        <i data-feather="log-out" class="nav-icon"></i>
-                        <span class="nav-text">Cerrar Sesión</span>
-                    </a>
+                    <form method="POST" action="{{ route('logout') }}" class="nav-link p-0" style="background: none; border: none;">
+                        @csrf
+                        <button type="submit" class="nav-link" style="background: none; border: none; width: 100%; text-align: left;">
+                            <i data-feather="log-out" class="nav-icon"></i>
+                            <span class="nav-text">Cerrar Sesión</span>
+                        </button>
+                    </form>
                 </div>
             </div>
         </nav>
@@ -457,7 +460,14 @@
                         <li><a class="dropdown-item" href="#"><i data-feather="user" class="me-2"></i>Mi Perfil</a></li>
                         <li><a class="dropdown-item" href="#"><i data-feather="settings" class="me-2"></i>Configuración</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ route('logout') }}"><i data-feather="log-out" class="me-2"></i>Cerrar Sesión</a></li>
+                        <li>
+                            <form method="POST" action="{{ route('logout') }}" class="mb-0">
+                                @csrf
+                                <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left;">
+                                    <i data-feather="log-out" class="me-2"></i>Cerrar Sesión
+                                </button>
+                            </form>
+                        </li>
                     </ul>
                 </div>
             </div>

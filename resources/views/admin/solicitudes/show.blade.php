@@ -66,8 +66,8 @@
                     </div>
                     <div class="card-body">
                         <div class="media">
-                            <img src="{{ $solicitud->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($solicitud->user->name ?? 'Usuario') . '&background=007bff&color=ffffff&size=128' }}" 
-                                 class="mr-3 rounded-circle" alt="Avatar" style="width: 64px; height: 64px;">
+                            <!-- <img src="{{ $solicitud->user->avatar_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($solicitud->user->name ?? 'Usuario') . '&background=007bff&color=ffffff&size=128' }}" 
+                                 class="mr-3 rounded-circle" alt="Avatar" style="width: 64px; height: 64px;"> -->
                             <div class="media-body">
                                 <h5 class="mt-0 mb-1">{{ $solicitud->user->name ?? 'Usuario sin nombre' }}</h5>
                                 <div class="row">
@@ -280,7 +280,7 @@
                             </div>
                         </div>
                         
-                        @if($solicitud->assignedUser)
+                        <!-- @if($solicitud->assignedUser)
                         <hr>
                         <div class="text-center">
                             <h6 class="text-muted">Asignado a:</h6>
@@ -298,7 +298,7 @@
                                 Asignar Funcionario
                             </button>
                         </div>
-                        @endif
+                        @endif -->
                     </div>
                 </div>
 
@@ -316,14 +316,14 @@
                                 <i class="fas fa-comments mr-2"></i>
                                 Chatear con Ciudadano
                             </button>
-                            <button type="button" class="btn btn-outline-info btn-block" onclick="generateReport()">
+                            <!-- <button type="button" class="btn btn-outline-info btn-block" onclick="generateReport()">
                                 <i class="fas fa-file-pdf mr-2"></i>
                                 Generar Reporte
                             </button>
                             <a href="{{ route('admin.solicitudes.edit', $solicitud->id) }}" class="btn btn-outline-secondary btn-block">
                                 <i class="fas fa-edit mr-2"></i>
                                 Editar Solicitud
-                            </a>
+                            </a> -->
                         </div>
                     </div>
                 </div>
